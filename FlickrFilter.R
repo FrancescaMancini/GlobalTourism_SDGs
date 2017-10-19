@@ -9,79 +9,183 @@
 library(R.utils)
 library(data.table)
 
-bunzip2("E:/Flickr1M/yfcc100m_autotags.bz2",
-        "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt")
+# create variable for file path
+dataFilePath <- "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/Flickr100M/"
 
-autotags1 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                      sep="\t", nrows = 10000000)
-write.table(autotags1, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags1.txt")
+# unzip original data file
+bunzip2("E:/Flickr1M/yfcc100m_autotags.bz2", 
+        paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""))
+
+# split up the dataset into 10 datasets to avoid running out of memory
+# read in the first 10000000 lines
+autotags1 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""), 
+                   colClasses = c("char", "char"),sep="\t", nrows = 10000000)
+
+# assign column names
+names(autotags1) <- c("photoID", "autotags")
+
+# eliminate punctuation in the autotags column
+autotags1$autotags <- gsub("[[:punct:] ]+", "", autotags1$autotags)
+# eliminate numbers in the autotags column
+autotags1$autotags <- gsub("[[:digit:]]+", " ", autotags1$autotags)
+
+# create a vector with IDs of the photos containing the autotag "nature"
+ID_sub1 <- autotags1[grep("nature", autotags1$autotags, value = F, perl = T),1]
 rm(autotags1)
+gc()
 
+# save the vector as .txt file
+write.table(ID_sub1, paste(dataFilePath, "ID_sub1.txt", sep = ""))
+rm(ID_sub1)
+gc()
 
-autotags2 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                        sep="\t", nrows = 10000000, skip = 10000000)
-write.table(autotags2, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags2.txt")
+# repeat for the rest of the dataset
+autotags2 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""),
+                   colClasses = c("char", "char"), sep="\t", nrows = 10000000, skip = 10000000)
+
+names(autotags2) <- c("photoID", "autotags")
+
+autotags2$autotags <- gsub("[[:punct:] ]+", "", autotags2$autotags)
+autotags2$autotags <- gsub("[[:digit:]]+", " ", autotags2$autotags)
+
+ID_sub2 <- autotags2[grep("nature", autotags2$autotags, value = F, perl = T),1]
 rm(autotags2)
+gc()
+
+write.table(ID_sub2, paste(dataFilePath, "ID_sub2.txt", sep = ""))
+rm(ID_sub2)
+gc()
 
 
-autotags3 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                        sep="\t", nrows = 10000000, skip = 20000000)
-write.table(autotags3, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags3.txt")
+
+autotags3 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""),
+                   colClasses = c("char", "char"),sep="\t", nrows = 10000000, skip = 20000000)
+names(autotags3) <- c("photoID", "autotags")
+
+autotags3$autotags <- gsub("[[:punct:] ]+", "", autotags3$autotags)
+autotags3$autotags <- gsub("[[:digit:]]+", " ", autotags3$autotags)
+
+ID_sub3 <- autotags3[grep("nature", autotags3$autotags, value = F, perl = T),1]
 rm(autotags3)
+gc()
+
+write.table(ID_sub3, paste(dataFilePath, "ID_sub3.txt", sep = ""))
+rm(ID_sub3)
+gc()
 
 
-autotags4 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                        sep="\t", nrows = 10000000, skip = 30000000)
-write.table(autotags4, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags4.txt")
+
+autotags4 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""),
+                   colClasses = c("char", "char"),sep="\t", nrows = 10000000, skip = 30000000)
+names(autotags4) <- c("photoID", "autotags")
+
+autotags4$autotags <- gsub("[[:punct:] ]+", "", autotags4$autotags)
+autotags4$autotags <- gsub("[[:digit:]]+", " ", autotags4$autotags)
+
+ID_sub4 <- autotags4[grep("nature", autotags4$autotags, value = F, perl = T),1]
 rm(autotags4)
+gc()
+
+write.table(ID_sub4, paste(dataFilePath, "ID_sub4.txt", sep = ""))
+rm(ID_sub4)
+gc()
 
 
-autotags5 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                        sep="\t", nrows = 10000000, skip = 40000000)
-write.table(autotags5, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags5.txt")
+
+autotags5 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""),
+                   colClasses = c("char", "char"),sep="\t", nrows = 10000000, skip = 40000000)
+names(autotags5) <- c("photoID", "autotags")
+
+autotags5$autotags <- gsub("[[:punct:] ]+", "", autotags5$autotags)
+autotags5$autotags <- gsub("[[:digit:]]+", " ", autotags5$autotags)
+
+ID_sub5 <- autotags5[grep("nature", autotags5$autotags, value = F, perl = T),1]
 rm(autotags5)
+gc()
+
+write.table(ID_sub5, paste(dataFilePath, "ID_sub5.txt", sep = ""))
+rm(ID_sub5)
+gc()
 
 
-autotags6 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                        sep="\t", nrows = 10000000, skip = 50000000)
-write.table(autotags6, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags6.txt")
+
+autotags6 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""),
+                   colClasses = c("char", "char"),sep="\t", nrows = 10000000, skip = 50000000)
+names(autotags6) <- c("photoID", "autotags")
+
+autotags6$autotags <- gsub("[[:punct:] ]+", "", autotags6$autotags)
+autotags6$autotags <- gsub("[[:digit:]]+", " ", autotags6$autotags)
+
+ID_sub6 <- autotags6[grep("nature", autotags6$autotags, value = F, perl = T),1]
 rm(autotags6)
+gc()
+
+write.table(ID_sub6, paste(dataFilePath, "ID_sub6.txt", sep = ""))
+rm(ID_sub6)
+gc()
 
 
-autotags7 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                        sep="\t", nrows = 10000000, skip = 60000000)
-write.table(autotags7, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags7.txt")
+
+autotags7 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""),
+                   colClasses = c("char", "char"),sep="\t", nrows = 10000000, skip = 60000000)
+names(autotags7) <- c("photoID", "autotags")
+
+autotags7$autotags <- gsub("[[:punct:] ]+", "", autotags7$autotags)
+autotags7$autotags <- gsub("[[:digit:]]+", " ", autotags7$autotags)
+
+ID_sub7 <- autotags7[grep("nature", autotags7$autotags, value = F, perl = T),1]
 rm(autotags7)
+gc()
+
+write.table(ID_sub7, paste(dataFilePath, "ID_sub7.txt", sep = ""))
+rm(ID_sub7)
+gc()
 
 
-autotags8 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                        sep="\t", nrows = 10000000, skip = 70000000)
-write.table(autotags8, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags8.txt")
+
+autotags8 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""),
+                   colClasses = c("char", "char"),sep="\t", nrows = 10000000, skip = 70000000)
+names(autotags8) <- c("photoID", "autotags")
+
+autotags8$autotags <- gsub("[[:punct:] ]+", "", autotags8$autotags)
+autotags8$autotags <- gsub("[[:digit:]]+", " ", autotags8$autotags)
+
+ID_sub8 <- autotags8[grep("nature", autotags8$autotags, value = F, perl = T),1]
 rm(autotags8)
+gc()
+
+write.table(ID_sub8, paste(dataFilePath, "ID_sub8.txt", sep = ""))
+rm(ID_sub8)
+gc()
 
 
-autotags9 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                        sep="\t", nrows = 10000000, skip = 80000000)
-write.table(autotags9, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags9.txt")
+autotags9 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""),
+                   colClasses = c("char", "char"),sep="\t", nrows = 10000000, skip = 80000000)
+names(autotags9) <- c("photoID", "autotags")
+
+autotags9$autotags <- gsub("[[:punct:] ]+", "", autotags9$autotags)
+autotags9$autotags <- gsub("[[:digit:]]+", " ", autotags9$autotags)
+
+ID_sub9 <- autotags9[grep("nature", autotags9$autotags, value = F, perl = T),1]
 rm(autotags9)
+gc()
+
+write.table(ID_sub9, paste(dataFilePath, "ID_sub9.txt", sep = ""))
+rm(ID_sub9)
+gc()
 
 
-autotags1 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags.txt",
-                        sep="\t", nrows = 10000000, skip = 90000000)
-write.table(autotags10, "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags10.txt")
+autotags10 <- fread(paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""),
+                    colClasses = c("char", "char"),sep="\t", nrows = 10000000, skip = 90000000)
+names(autotags10) <- c("photoID", "autotags")
+
+autotags10$autotags <- gsub("[[:punct:] ]+", "", autotags10$autotags)
+autotags10$autotags <- gsub("[[:digit:]]+", " ", autotags10$autotags)
+
+ID_sub10 <- autotags10[grep("nature", autotags10$autotags, value = F, perl = T),1]
 rm(autotags10)
+gc()
 
-
-tags1 <- read.table("C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/yfcc100m_autotags1.txt",
-                    sep="\t")
-
-names(tags1) <- c("photoID", "autotags")
-
-tags1 <- gsub("[[:punct:] ]+", "", tags1)
-tags1 <- gsub("[[:digit:]]+", "", tags1)
-
-ID_sub1 <- tags1[grep("nature", tags1$autotags, value = F, perl = T),1]
-
-write.table(ID_sub1, "ID_sub1.txt")
-
-
+write.table(ID_sub10, paste(dataFilePath, "ID_sub10.txt", sep = ""))
+rm(ID_sub10)
+gc()
