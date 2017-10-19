@@ -6,6 +6,8 @@
 #Date modified: 
 #################################################
 
+# load packages and set-up----
+
 library(R.utils)
 library(data.table)
 
@@ -15,6 +17,8 @@ dataFilePath <- "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/Flickr1
 # unzip original data file
 bunzip2("E:/Flickr1M/yfcc100m_autotags.bz2", 
         paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""))
+
+# create a list of IDs for photos of nature---- 
 
 # split up the dataset into 10 datasets to avoid running out of memory
 # read in the first 10000000 lines
@@ -189,3 +193,37 @@ gc()
 write.table(ID_sub10, paste(dataFilePath, "ID_sub10.txt", sep = ""))
 rm(ID_sub10)
 gc()
+
+# subset the complete dataset by retaining only photos with IDs selected in the previous part----
+
+filename <- "ID_sub"
+ID <- NULL
+
+for (i in 1:10){
+  ID <- rbind(ID, read.table(paste(dataFilePath, filename, i, ".txt", sep = ""), 
+                             colClasses = c("NULL", "character"), skip = 1, header = F))
+}
+
+
+for (j in 1:10) {
+  bunzip2(paste(dataFilePath, "dataset", j, ".bz2", sep = ""),
+          paste(dataFilePath, "dataset", j, ".txt", sep = ""), remove = T)}
+
+
+# need to parallelise this
+
+dat_filtered <- NULL
+
+filtering <- function ()
+
+  dat <- fread(paste(dataFilePath, "dataset", j, ".txt", sep = ""), header = F, nrows = 10,
+             sep = "\t", colClasses=c("character", "character","NULL","character","NULL","NULL","NULL","NULL",
+                                      "NULL","NULL","numeric","numeric","NULL","NULL","NULL","NULL","NULL",
+                                      "NULL","NULL","NULL", "NULL","NULL","NULL"))
+
+names(dat) <- c("photoID", "userID", "date", "longitude", "latitude")
+
+setkey(dat, photoID)
+
+dat_filtered<- rbind(dat_filtered, dat[.(ID[,1]), nomatch = 0L])
+
