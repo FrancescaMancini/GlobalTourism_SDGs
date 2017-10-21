@@ -14,9 +14,15 @@ library(data.table)
 # create variable for file path
 dataFilePath <- "C:/Users/r03fm14/OneDrive - University of Aberdeen/Data/Flickr100M/"
 
-# unzip original data file
+# unzip original data files
 bunzip2("E:/Flickr1M/yfcc100m_autotags.bz2", 
         paste(dataFilePath, "yfcc100m_autotags.txt", sep = ""))
+
+for (j in 1:10) {
+ bunzip2(paste(dataFilePath, "dataset", j, ".bz2", sep = ""),
+         paste(dataFilePath, "dataset", j, ".txt", sep = ""), remove = T)}
+
+
 
 # create a list of IDs for photos of nature---- 
 
@@ -196,34 +202,54 @@ gc()
 
 # subset the complete dataset by retaining only photos with IDs selected in the previous part----
 
+
+# create a dataset containing all the selected IDs
 filename <- "ID_sub"
 ID <- NULL
 
 for (i in 1:10){
-  ID <- rbind(ID, read.table(paste(dataFilePath, filename, i, ".txt", sep = ""), 
+  ID <- rbind(ID, read.table(paste(dataFilePath, filename, i, ".txt", sep = ""),
                              colClasses = c("NULL", "character"), skip = 1, header = F))
 }
 
+names(ID) <- "photoID"
 
-for (j in 1:10) {
-  bunzip2(paste(dataFilePath, "dataset", j, ".bz2", sep = ""),
-          paste(dataFilePath, "dataset", j, ".txt", sep = ""), remove = T)}
+# save the dataset
+# write.table(ID, paste(dataFilePath, "filteredID.txt", sep = ""))
 
 
-# need to parallelise this
 
-dat_filtered <- NULL
+# ID <- fread(paste(dataFilePath, "filteredID.txt", sep = ""),
+#                  colClasses = c("NULL", "character"), skip = 1, header = F)
+# names(ID) <- "photoID"
 
-filtering <- function ()
+# create a list with all the files' names of the complete yfcc100m datasets
 
-  dat <- fread(paste(dataFilePath, "dataset", j, ".txt", sep = ""), header = F, nrows = 10,
-             sep = "\t", colClasses=c("character", "character","NULL","character","NULL","NULL","NULL","NULL",
-                                      "NULL","NULL","numeric","numeric","NULL","NULL","NULL","NULL","NULL",
-                                      "NULL","NULL","NULL", "NULL","NULL","NULL"))
+files <- list.files(dataFilePath, "dataset")
 
-names(dat) <- c("photoID", "userID", "date", "longitude", "latitude")
+# apply a custom function to all the elements in the file list
+# the function:
+# 1 - reads the dataset in
+# 2 - assigns column names
+# 3 - filters the rows according to the photoIDs contained in the dataset ID using data.table indexes
+# lapply creates a list containing the subsets of all 10 datasets with rows selected by the function
 
-setkey(dat, photoID)
+df_list <- lapply(files, function(x, ID){
+  dat <- fread(paste(dataFilePath, x, sep = ""), header = F, sep = "\t", 
+               colClasses=c("character", "character","NULL","character","NULL","NULL","NULL","NULL",
+                            "NULL","NULL","numeric","numeric","NULL","NULL","NULL","NULL","NULL",
+                            "NULL","NULL","NULL", "NULL","NULL","NULL"))
+  
+  names(dat) <- c("photoID", "userID", "date", "longitude", "latitude")
+  setkey(dat, photoID)
+  dat_filtered <- NULL
+  dat_filtered<- rbind(dat_filtered, dat[.(ID[,1]), nomatch = 0L])
+  
+  return(dat_filtered)        
+}, ID = ID)
 
-dat_filtered<- rbind(dat_filtered, dat[.(ID[,1]), nomatch = 0L])
+# create one dataset by binding all the elements in the list
+df_filtered <- do.call(rbind, df_list)
 
+# save the dataset containing 22644780 observations
+write.table(df_filtered, paste(dataFilePath, "filteredData.txt", sep = ""), row.names = F)
