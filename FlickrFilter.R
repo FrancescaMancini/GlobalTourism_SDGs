@@ -3,7 +3,7 @@
 #dataset according to concept tags
 #Author: Francesca Mancini
 #Date created: 2017-10-17
-#Date modified: 
+#Date modified: 2017-10-23
 #################################################
 
 # load packages and set-up----
@@ -248,8 +248,11 @@ df_list <- lapply(files, function(x, ID){
   return(dat_filtered)        
 }, ID = ID)
 
-# create one dataset by binding all the elements in the list
+# create one dataset by binding all the elements in the list (22644780 observations)
 df_filtered <- do.call(rbind, df_list)
 
-# save the dataset containing 22644780 observations
-write.table(df_filtered, paste(dataFilePath, "filteredData.txt", sep = ""), row.names = F)
+# discard rows with no lat/long (12935520 observations remaining)
+df_filtered_sp <- df_filtered[which(is.na(df_filtered$longitude)!=TRUE),]
+
+# save the dataset containing  observations
+write.table(df_filtered_sp, paste(dataFilePath, "filteredData.txt", sep = ""), row.names = F)
