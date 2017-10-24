@@ -33,11 +33,11 @@ proj4string(flickr) <- proj4string(world)
 plot(flickr, pch = 20, col = "steelblue")
 plot(world, add = T)
 
-##################################################
+#####################################################
 # this code was run on the University of Aberdeen 
 # High Performance Computer Cluster Maxwell
 # on a single node with 32G memory
-##################################################
+#####################################################
 
 # overlay points over polygons 
 # (which country is every picture from?)
@@ -48,7 +48,11 @@ flickr <- cbind(flickr@data, flickr_country$ADMIN)
 # change column name
 names(flickr)[4] <- "Country"
 
-##################################################
+#####################################################
+
+#####################################################
+## calculate how many flickr user days per country ##
+#####################################################
 
 flickr <- fread("C:\\Users\\r03fm14\\OneDrive - University of Aberdeen\\Data\\Flickr100M\\filteredData.txt",
                 colClasses = c("character", "character", "character", "character"), sep = " ", header = T)
@@ -98,8 +102,9 @@ world_df <- merge(world_df, world@data, by.x = "id", by.y = "ADMIN", all.x = TRU
 # make NAs 0s
 world_df$Freq[which(is.na(world_df$Freq)==TRUE)] <- 0
 
-# plot
-# plot
+
+# plot how many user days per country
+
 flickr_global <- ggplot() + 
   geom_polygon(data = world_df, aes(x = long, y = lat, group = group, fill =
                                       log10(Freq)), colour = "black", size = 0.25) +
@@ -120,5 +125,19 @@ flickr_global <- ggplot() +
 tiff(filename="FlickrGlobal.tiff",width=3000,height=3000,res=300)
 flickr_global
 dev.off()
+
+#########################################################
+#####        aggregate by year and country         ######
+#########################################################
+
+flickr_country_year <- data.frame(table(flickr_terr$Country, flickr_terr$year))
+
+names(flickr_country_year) <- c("country", "year", "FUD")
+
+write.table(flickr_country_year, "C:\\Users\\r03fm14\\OneDrive - University of Aberdeen\\Data\\Flickr100M\\Flickr_agg.txt",
+            row.names = F, sep = "\t")
+
+
+
 
 
