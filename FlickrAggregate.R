@@ -12,6 +12,8 @@ library(rworldmap)
 library(lubridate)
 library(plyr)
 library(ggplot2)
+#library(viridis)
+library(RColorBrewer)
 
 # download a world map at a coarse resolution
 world <- getMap(resolution = "coarse")
@@ -97,23 +99,26 @@ world_df <- merge(world_df, world@data, by.x = "id", by.y = "ADMIN", all.x = TRU
 world_df$Freq[which(is.na(world_df$Freq)==TRUE)] <- 0
 
 # plot
-flickr_global <- ggplot() + geom_polygon(data = world_df, aes(x = long, y = lat, group = group, fill =
-                                                                   log10(Freq)), color = "black", size = 0.25) +
-                 theme(aspect.ratio=0.7)
+# plot
+flickr_global <- ggplot() + 
+  geom_polygon(data = world_df, aes(x = long, y = lat, group = group, fill =
+                                      log10(Freq)), colour = "black", size = 0.25) +
+  coord_fixed() +
+  scale_fill_gradientn(colours=brewer.pal(n=8, name="PuBuGn")) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.background = element_blank(),
+        plot.background = element_blank(),
+        axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_blank())
 
-theme_opts<-list(theme(panel.grid.minor = element_blank(),
-                       panel.grid.major = element_blank(),
-                       panel.background = element_blank(),
-                       plot.background = element_blank(),
-                       axis.line = element_blank(),
-                       axis.text.x = element_blank(),
-                       axis.text.y = element_blank(),
-                       axis.ticks = element_blank(),
-                       axis.title.x = element_blank(),
-                       axis.title.y = element_blank(),
-                       plot.title = element_blank()))
+tiff(filename="FlickrGlobal.tiff",width=3000,height=3000,res=300)
+flickr_global
+dev.off()
 
-
-
-flickr_global + theme_opts
 
