@@ -1,9 +1,9 @@
 #################################################
-#Script for filtering 100M flickr 
-#dataset according to concept tags
-#Author: Francesca Mancini
-#Date created: 2017-10-17
-#Date modified: 2017-10-23
+# Script for filtering 100M flickr 
+# dataset according to concept tags
+# Author: Francesca Mancini
+# Date created: 2017-10-17
+# Date modified: 2017-10-23
 #################################################
 
 # load packages and set-up----

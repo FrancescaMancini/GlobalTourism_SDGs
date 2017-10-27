@@ -1,9 +1,9 @@
 #################################################
-#Script for aggregating filtered flickr  
-#pictures by country and year
-#Author: Francesca Mancini
-#Date created: 2017-10-23
-#Date modified: 2017-10-23
+# Script for aggregating filtered flickr  
+# pictures by country and year
+# Author: Francesca Mancini
+# Date created: 2017-10-23
+# Date modified: 2017-10-24
 #################################################
 
 library(data.table)
