@@ -3,7 +3,7 @@
 # pictures by country and year
 # Author: Francesca Mancini
 # Date created: 2017-10-23
-# Date modified: 2017-11-02
+# Date modified: 2017-11-03
 #################################################
 
 #####################################################
@@ -198,7 +198,7 @@ write.table(count_NVD_year, "./Flickr/NFVD_year.txt",
 library(plyr)
 library(ggplot2)
 library(viridis)
-library(RColorBrewer)
+#library(RColorBrewer)
 #library(sp)
 library(rworldmap)
 
@@ -303,4 +303,58 @@ flickr_global_NFVD_prop
 dev.off()
 
 
+####################################################################
+# make a map to visualise number of NVD prop per country per year
+####################################################################
+
+world <- getMap(resolution = "coarse")
+
+# change names of count columns 
+names(count_VD_year)[c(1,3)] <- c("ADMIN", "FVD")
+names(count_NVD_year)[c(1,3)] <- c("ADMIN", "NFVD")
+
+# merge the datasets so every country in the world dataset has the count of VD and NVD
+# all.x = T makes sure that we retain all countries, even those that have no pictures
+world@data <- merge (world@data, count_NVD_year, by = "ADMIN", all.x = TRUE) 
+world@data <- merge (world@data, count_VD_year, by = c("ADMIN", "year"), all.y = TRUE)
+# make NAs 0s
+world@data$NFVD[which(is.na(world@data$NFVD)==TRUE)] <- 0
+
+# calculate proportion of nature VD over all VD
+world@data$NFVD_prop <- rep(NA, length(world@data$NFVD))
+
+for(i in 1:length(world@data$FVD)){
+  if(world@data$FVD[i] != 0) {
+    world@data$NFVD_prop[i] <- world@data$NFVD[i]/world@data$FVD[i]} 
+}
+
+# convert world map into a format readable by ggplot2
+world_df <- fortify(world)
+# merge the fortified dataset and the result of the previous merge
+#by.x and by.y are different because column names are different
+world_df <- merge(world_df, world@data, by.x = "id", by.y = "ADMIN", all.x = TRUE)  
+
+# plot how many FVD per country
+
+NFVD_prop_year <- ggplot() + 
+  geom_polygon(data = world_df, aes(x = long, y = lat, group = group, fill =
+                                      NFVD_prop), colour = "black", size = 0.25) +
+  coord_fixed() +
+  scale_fill_viridis(option = "A", na.value = "white")+
+  facet_wrap(~year)+
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.background = element_blank(),
+        plot.background = element_blank(),
+        axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_blank())
+
+tiff(filename="FlickrNFVDprop.tiff",width=3000,height=3000,res=300)
+NFVD_prop_year
+dev.off()
 
