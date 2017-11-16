@@ -63,3 +63,10 @@ UN_indicators.split <- dcast(UN_indicators_combined,
 UN_indicators.split <- subset(UN_indicators.split, year > 2003 & year < 2015)
 # save dataset
 write.csv(UN_indicators.split, paste(dataFilePath, "UN_indicators_combined.csv", sep = ""), row.names = F)
+
+# create a legend for every indicator series
+UN_indicators.legend <- lapply(UN_indicators.all, function(x) 
+  unique(x[c("Series.Code", "Series.Description", "Indicator.Ref", "Sex", "Age.group")]))
+
+UN_indicators.legend <- do.call(rbind, UN_indicators.legend)
+write.csv(UN_indicators.legend, paste(dataFilePath, "UN_indicators_legend.csv", sep = ""), row.names = F)
