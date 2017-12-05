@@ -2,7 +2,7 @@
 # Script for combining data from UN
 # Author: Francesca Mancini
 # Date created: 2017-11-13
-# Date modified: 2017-11-16
+# Date modified: 2017-12-05
 ##################################################
 
 library(tidyr)
@@ -57,7 +57,7 @@ UN_indicators_combined$value <- as.numeric(UN_indicators_combined$value)
 # use dcast to transform dataset into wide format 
 # every indicator has its own column also split by age or sex
 UN_indicators.split <- dcast(UN_indicators_combined, 
-                             Country.or.Area.Name + year ~ Series.Code + Age.group + Sex, 
+                             Country.or.Area.Code + year ~ Series.Code + Age.group + Sex, 
                              value.var = "value")
 # only keep data between 2004 and 2015
 UN_indicators.split <- subset(UN_indicators.split, year > 2003 & year < 2015)
