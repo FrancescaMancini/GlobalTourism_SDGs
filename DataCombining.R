@@ -1,9 +1,9 @@
 ##################################################
 # Script for combining data from
-# UNWTO, WB and Flickr 
+# UNWTO, WB UN and Flickr 
 # Author: Francesca Mancini
 # Date created: 2017-10-27
-# Date modified: 2017-11-03
+# Date modified: 2017-12-05
 ##################################################
 
 library(tidyr)
@@ -183,3 +183,59 @@ names(indicators_wide)[1] <- "country_code"
 combined <- merge (tourism_combined, indicators_wide, by = c("country_code", "year"), all = TRUE)
 
 write.table(combined, "combined.txt", sep = "\t", row.names = F)
+
+
+
+# fill the gaps in WB indicators dataset
+# with UN indicators
+indicators_UN <- read.csv(paste(dataFilePath, "UNSDGindicators/UN_indicators_combined.csv", sep = ""), header = T)
+
+# only retain columns for indicators that we want to integrate
+# load a reference table for indicators
+UN_indic_legend <- read.table("UN_indicatorsLegend.txt", header = T)
+
+# subset reference table
+UN_indic_legend_sub1 <- subset(UN_indic_legend, Target %in% c("8.4", "12.4", "15.5", "15.6"))
+UN_indic_legend_sub2 <- subset(UN_indic_legend, Indicator %in% 
+                                 c("8.8.1", "8.8.4", "15.2.2", "15.2.3", 
+                                   "15.2.5", "15.2.6", "15.4.1", "15.4.4"))
+
+UN_indic_legend_sub <- rbind(UN_indic_legend_sub1, UN_indic_legend_sub2)
+
+# use subset ref table to subset dataset
+indicators_UN_sub <- subset(indicators_UN, select=names(indicators_UN) %in% UN_indic_legend_sub$Series.Code)
+# and put year and country back in
+indicators_UN_sub <- cbind(indicators_UN[1:2], indicators_UN_sub)
+
+# change the coumn names to match target and indicator number
+names(indicators_UN_sub) [-c(1,2)] <- paste("I", UN_indic_legend_sub[match(names(indicators_UN_sub)[-c(1,2)], UN_indic_legend_sub$Series.Code),
+                                                                     "Indicator"], sep = "-") 
+
+# combine the two datasets
+combined <- read.table("combined.txt", sep = "\t", header = T)
+
+# first subset WB dataset (exclude all disaggregated indicators)
+# load a reference table for indicators
+WB_indic_legend <- read.table("WBindicatorsLegend.txt", header = T)
+# subset reference table
+WB_indic_legend_sub <- subset(WB_indic_legend, Indicator %in% 
+                                 c("8.2.2", "8.2.3", "8.2.5", "8.2.6", "8.2.8", "8.2.9",
+                                   "8.3.2", "8.3.3", "8.5.1", "8.5.2", "8.5.3", "8.5.4",
+                                   "8.5.6", "8.5.7", "8.5.8", "8.5.9", "8.5.10", "8.5.12",
+                                   "8.5.13", "8.5.14", "8.6.1", "8.6.2", "8.7.1", "8.7.2",
+                                   "8.10.2", "8.10.3", "8.10.4", "8.10.5", "8.10.6", "8.10.7",
+                                   "8.10.8", "8.10.9", "15.1.2", "15.1.3"))
+
+# use subset ref table to subset dataset
+combined_sub <- subset(combined, select=!(names(combined) %in% WB_indic_legend_sub$Series.Code))
+
+# change the coumn names to match target and indicator number
+names(combined_sub) [-c(1:12)] <- paste("I", WB_indic_legend[match(names(combined_sub)[-c(1:12)], WB_indic_legend$Series.Code),
+                                                                     "Indicator"], sep = "-") 
+# rename country code column in UN indicators dataset
+names(indicators_UN_sub)[1] <- "country_code"
+# merge the two datasets
+integrated <- merge (indicators_UN_sub, combined_sub, by = c("country_code", "year"), all.y = TRUE)
+
+write.table(integrated, "integrated.txt", sep = "\t", row.names = F)
+
