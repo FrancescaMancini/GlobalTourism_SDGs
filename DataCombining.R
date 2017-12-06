@@ -3,7 +3,7 @@
 # UNWTO, WB UN and Flickr 
 # Author: Francesca Mancini
 # Date created: 2017-10-27
-# Date modified: 2017-12-05
+# Date modified: 2017-12-06
 ##################################################
 
 library(tidyr)
@@ -208,7 +208,7 @@ indicators_UN_sub <- subset(indicators_UN, select=names(indicators_UN) %in% UN_i
 indicators_UN_sub <- cbind(indicators_UN[1:2], indicators_UN_sub)
 
 # change the coumn names to match target and indicator number
-names(indicators_UN_sub) [-c(1,2)] <- paste("I", UN_indic_legend_sub[match(names(indicators_UN_sub)[-c(1,2)], UN_indic_legend_sub$Series.Code),
+names(indicators_UN_sub) [-c(1,2)] <- paste("Indicator", UN_indic_legend_sub[match(names(indicators_UN_sub)[-c(1,2)], UN_indic_legend_sub$Series.Code),
                                                                      "Indicator"], sep = "-") 
 
 # combine the two datasets
@@ -230,7 +230,7 @@ WB_indic_legend_sub <- subset(WB_indic_legend, Indicator %in%
 combined_sub <- subset(combined, select=!(names(combined) %in% WB_indic_legend_sub$Series.Code))
 
 # change the coumn names to match target and indicator number
-names(combined_sub) [-c(1:12)] <- paste("I", WB_indic_legend[match(names(combined_sub)[-c(1:12)], WB_indic_legend$Series.Code),
+names(combined_sub) [-c(1:12)] <- paste("Indicator", WB_indic_legend[match(names(combined_sub)[-c(1:12)], WB_indic_legend$Series.Code),
                                                                      "Indicator"], sep = "-") 
 # rename country code column in UN indicators dataset
 names(indicators_UN_sub)[1] <- "country_code"
