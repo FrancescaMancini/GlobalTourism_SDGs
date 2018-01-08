@@ -86,9 +86,9 @@ dev.off()
 
 # create a function
  
-country_year_maps <- function(data, value) {
-  ggplot() + 
-    geom_polygon(data = data, aes(x = long, y = lat, group = group, fill =
+country_year_maps <- function(data, xcol, ycol, group, value) {
+  map <- ggplot() + 
+    geom_polygon(data = data, aes_string(x = xcol, y = ycol, group = group, fill =
                                         value), colour = "black", size = 0.25) +
     coord_fixed() +
     scale_fill_viridis()+
@@ -104,10 +104,11 @@ country_year_maps <- function(data, value) {
           axis.title.x = element_blank(),
           axis.title.y = element_blank(),
           plot.title = element_blank())
-  
+ 
+plot(map)   
 }
 
-country_year_maps(world_df, world_df$guests_int)
+country_year_maps(data = world_df, xcol = "long", ycol = "lat", group = "group", value = "guests_int")
 
 # plot all to check for variables with poor time and space coverage
 
