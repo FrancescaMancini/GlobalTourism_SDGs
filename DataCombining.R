@@ -3,7 +3,7 @@
 # UNWTO, WB UN and Flickr 
 # Author: Francesca Mancini
 # Date created: 2017-10-27
-# Date modified: 2017-12-06
+# Date modified: 2018-01-11
 ##################################################
 
 library(tidyr)
@@ -103,7 +103,14 @@ write.table(tourism, paste(dataFilePath, "UNWTO/WTOcombined.txt", sep = ""), row
 
 # calculate proportion of nature flickr visitor days
 NFVD_prop <- merge(NFVD, FVD, all = T)
-NFVD_prop$NFVD_prop <- (NFVD_prop$NFVD/NFVD_prop$FVD)
+NFVD_prop$NFVD[is.na(NFVD_prop$NFVD)] <- 0
+
+NFVD_prop$NFVD_prop <- rep(NA, dim(NFVD_prop)[1])
+  
+for(i in 1:dim(NFVD_prop)[1]){
+  if(NFVD_prop$NFVD[i]==0 & NFVD_prop$FVD[i]==0) NFVD_prop$NFVD_prop[i] <- 0
+  else (NFVD_prop$NFVD_prop[i] <- NFVD_prop$NFVD[i]/NFVD_prop$FVD[i])}
+
 write.table(NFVD_prop, paste(dataFilePath, "Flickr100M/NFVD_prop.txt", sep = ""), row.names = F)
 
 ##############################################
@@ -142,7 +149,10 @@ flickr$country_code[which(flickr$country == "siachen glacier")] <- "IND"
 
 # now aggregate all columns with same country code and year
 flickr <- ddply(flickr, c("country_code", "year"), numcolwise(sum), na.rm = T)
-flickr$NFVD_prop <- flickr$NFVD/flickr$FVD
+for(i in 1:dim(flickr)[1]){
+  if(flickr$NFVD[i]==0 & flickr$FVD[i]==0) flickr$NFVD_prop[i] <- 0
+  else (flickr$NFVD_prop[i] <- flickr$NFVD[i]/flickr$FVD[i])}
+
 
 
 # convert tourism country names into ISO3 codes
