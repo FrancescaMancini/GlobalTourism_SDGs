@@ -2,3 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+Dom_trips.tiff
+FlickrGlobalNVD.tiff
+*.tiff
+*.png
