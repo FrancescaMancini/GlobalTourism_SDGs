@@ -8,6 +8,7 @@
 # load packages
 library(nlme)
 library(gridExtra)
+
 # load the data and reorder the dataset columns
 # so that indicators for the same target are close together
 
@@ -160,6 +161,9 @@ mydata.log$arrivals_int <- scale(log(mydata.log$arrivals_int))
 mydata.log$exp_int <- scale(log(mydata.log$exp_int))
 mydata.log$NFVD_prop <- scale(mydata.log$NFVD_prop)
 
+##############################
+# Domestic trips
+##############################
 
 domtrips.AR  <- lme(trips_dom ~ NFVD_prop, random=~1|country_code, data = mydata.log,
                  correlation=corAR1(form=~year|country_code),na.action = na.omit)
@@ -182,7 +186,9 @@ grid.arrange(plot(domtrips.AR, form = resid(., type = "n") ~ fitted(.), abline =
              qqnorm(domtrips.AR, ~ resid(., type = "n"), abline = c(0, 1)),
              plot(ACF(domtrips.AR, resType = "normalized"), alpha = .05))
 
-
+###########################
+# International arrivals
+###########################
 
 arrivals.AR <- lme(arrivals_int ~ NFVD_prop, random=~1|country_code, data = mydata.log,
                 correlation=corAR1(form=~year|country_code),na.action = na.omit)
@@ -201,6 +207,11 @@ grid.arrange(plot(arrivals.ARMA, form = resid(., type = "n") ~ fitted(.), abline
              plot(ACF(arrivals.ARMA, resType = "normalized"), alpha = .05))
 
 summary(arrivals.ARMA)
+
+
+##############################
+# International expenditure
+##############################
 
 expend_int.AR <- lme(exp_int ~ NFVD_prop, random=~1|country_code, data = mydata.log,
                      correlation=corAR1(form=~year|country_code),na.action = na.omit)
@@ -248,6 +259,11 @@ mydata.log$employ <- scale(log(mydata.log$employ))
 mydata.log$establishments <- scale(log(mydata.log$establishments))
 
 
+##############################
+# Employment
+##############################
+
+
 employment.1.AR <- lme(employ ~ NFVD_prop + arrivals_int ,
                        random=~1|country_code, data = mydata.log,
                        correlation=corAR1(form=~year|country_code),na.action = na.omit)
@@ -277,6 +293,10 @@ grid.arrange(plot(employment.2.AR, form = resid(., type = "n") ~ fitted(.), abli
              qqnorm(employment.2.AR, ~ resid(., type = "n"), abline = c(0, 1)),
              plot(ACF(employment.2.AR, resType = "normalized"), alpha = .05))
 
+
+##############################
+# Establishments
+##############################
 
 
 establishments.1.AR <- lme(establishments ~ NFVD_prop + arrivals_int, 
