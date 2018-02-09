@@ -3,7 +3,7 @@
 # of SDG indicators and tourism
 # Author: Francesca Mancini
 # Date created: 2017-12-06
-# Date modified: 2018-02-02 
+# Date modified: 2018-02-08 
 ##################################################
 # load packages
 library(nlme)
@@ -65,7 +65,7 @@ mydata.log <- mydata
 #mydata.log$trips_dom <- log(mydata$trips_dom)
 mydata.log$arrivals_int <- scale(log(mydata$arrivals_int))
 mydata.log$exp_int <- scale(log(mydata$exp_int))
-
+mydata.log$NFVD_prop <- scale(mydata$NFVD_prop)
 
 
 # Tourism jobs
@@ -200,6 +200,7 @@ mydata.log$Indicator.15.5.1 <- scale(asin(mydata$Indicator.15.5.1.x))
 
 
 # graphical exploration ######
+
 panel.hist <- function(x, ...)
 {
   usr <- par("usr"); on.exit(par(usr))
@@ -223,78 +224,49 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 }
 
 # look at correlation between indicators variables
-pairs(mydata[,3:12], upper.panel = panel.smooth, lower.panel = panel.cor,
+
+# tourism
+pairs(mydata.log[,c(6,8:10, 12)], upper.panel = panel.smooth, lower.panel = panel.cor,
       diag.panel = panel.hist, main = "Tourism") 
 
-pairs(mydata[61:63], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 8.5")
+# goal 12
+pairs(mydata.log[c(6,8:10, 12, 13)], upper.panel = panel.smooth, lower.panel = panel.cor, 
+      diag.panel = panel.hist, main = "Goal 12")
 
-pairs(mydata[58:60], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 8.4")
+# goal 14
+pairs(mydata.log[c(6,8:10, 12, 24:26)], upper.panel = panel.smooth, lower.panel = panel.cor, 
+      diag.panel = panel.hist, main = "Goal 14")
 
-# indicator 8.4.3 has 9 observations only
-# we exclude it from the dataset
+# goal 15
+pairs(mydata.log[c(6,8:10, 12, 28, 35, 69)], upper.panel = panel.smooth, lower.panel = panel.cor, 
+      diag.panel = panel.hist, main = "Goal 15")
 
-pairs(mydata[56:57], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 8.3")
 
-pairs(mydata[51:55], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 8.2")
-
-pairs(mydata[49:50], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 8.10")
-
-pairs(mydata[47:48], upper.panel = panel.smooth, lower.panel = panel.cor, 
+# target 8.1
+pairs(mydata.log[c(6,8:10, 12, 47:48)], upper.panel = panel.smooth, lower.panel = panel.cor, 
       diag.panel = panel.hist, main = "Target 8.1")
 
-pairs(mydata[42:46], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 15.6")
+# target 8.2
+pairs(mydata.log[c(6,8:10, 12, 51:55)], upper.panel = panel.smooth, lower.panel = panel.cor, 
+      diag.panel = panel.hist, main = "Target 8.2")
 
-# Target 15.6 has nearly no data
-# only one datapoint per country in year 2012
-# not comparable with other indicators
-# exclude from dataset
+# target 8.5
+pairs(mydata.log[c(6,8:10, 12, 61:63)], upper.panel = panel.smooth, lower.panel = panel.cor, 
+      diag.panel = panel.hist, main = "Target 8.5")
 
-pairs(mydata[37:41], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 15.5")
-
-# Indicators 15.5.1y to 15.5.4 have no data
-# exclude from dataset
+# target 8.10
+pairs(mydata.log[c(6,8:10, 12, 50)], upper.panel = panel.smooth, lower.panel = panel.cor, 
+      diag.panel = panel.hist, main = "Target 8.10")
 
 
-pairs(mydata[35:36], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 15.4")
+ggplot(mydata, aes(x = year, y = exp_int)) +
+  geom_line(aes(colour = country_code)) +
+  geom_smooth(col = "black")
 
-# Indicator 15.4.4 has no data
-# remove from dataset
-
-pairs(mydata[30:34], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 15.2")
-
-pairs(mydata[28:29], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 15.1")
-
-pairs(mydata[24:27], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 14.5 - 14.4")
-
-pairs(mydata[20:23], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 12.4")
-
-# Target 12.4 has no data
-# remove from dataset
-
-pairs(mydata[13:19], upper.panel = panel.smooth, lower.panel = panel.cor, 
-      diag.panel = panel.hist, main = "Target 12.")
-
-delete <- c("Indicator.8.4.3", "Indicator.15.4.4", "Indicator.12.4.1", "Indicator.12.4.2",
-            "Indicator.12.4.3", "Indicator.12.4.4", "Indicator.15.6.1", "Indicator.15.6.2",
-            "Indicator.15.6.3", "Indicator.15.6.4", "Indicator.15.6.5", "Indicator.15.5.1.y",
-            "Indicator.15.5.2", "Indicator.15.5.3", "Indicator.15.5.4")
-
-mydata <- mydata[, !(names(mydata) %in% delete)] 
-
-deleteagain <-  c("Indicator.14.5.1", "Indicator.15.1.4", "Indicator.8.10.1")
-mydata <- mydata[, !(names(mydata) %in% deleteagain)] 
+ggplot(mydata.log, aes(x = NFVD_prop, y = exp_int)) +
+  geom_point(aes(colour = country_code)) +
+  geom_smooth(aes(colour = country_code)) +
+  facet_wrap(~income_level)
 
 
 # ===================================================
@@ -307,33 +279,31 @@ mydata <- mydata[, !(names(mydata) %in% deleteagain)]
 # International arrivals
 ###########################
 
-arrivals.gls.AR <- gls(arrivals_int ~ NFVD_prop, data = mydata.log,
-                       correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
-arrivals.gls.ARMA <- gls(arrivals_int ~ NFVD_prop, data = mydata.log,
-                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
-
-arrivals.gls.ARMA.var <- gls(arrivals_int ~ NFVD_prop, data = mydata.log, weights = varIdent(~ 1 | income_level),
-                         correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
-
-arrivals.AR.int <- lme(arrivals_int ~ NFVD_prop, random=~1|country_code, data = mydata.log,
+arrivals.AR <- lme(arrivals_int ~ NFVD_prop, random=~1|country_code, data = mydata.log,
                 correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
-
-arrivals.ARMA.int <- lme(arrivals_int ~ NFVD_prop, random=~1|country_code, data = mydata.log,
+arrivals.ARMA <- lme(arrivals_int ~ NFVD_prop, random=~1|country_code, data = mydata.log,
                      correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
 
 
-AIC(arrivals.gls.AR, arrivals.gls.ARMA, arrivals.gls.ARMA.var, arrivals.AR.int, arrivals.AR.sl, arrivals.ARMA.int, arrivals.ARMA.sl)
+AIC(arrivals.AR, arrivals.ARMA)
 
 
-grid.arrange(plot(arrivals.ARMA.int, form = resid(., type = "n") ~ fitted(.), abline = 0),
-             plot(arrivals.ARMA.int, form = resid(., type = "n") ~ NFVD_prop, abline = 0),             
-             qqnorm(arrivals.ARMA.int, ~ ranef(.)),
-             qqnorm(arrivals.ARMA.int, ~ resid(.), abline = c(0, 1)),
-             plot(ACF(arrivals.ARMA.int, resType = "normalized"), alpha = .05))
+grid.arrange(plot(arrivals.ARMA, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(arrivals.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
+             qqnorm(arrivals.ARMA, ~ ranef(.)),
+             plot(ACF(arrivals.ARMA, resType = "normalized"), alpha = .05))
 
-summary(arrivals.ARMA.int)
+qqnorm(resid(arrivals.ARMA, type = "p"))
+qqline(resid(arrivals.ARMA, type = "p"))
+
+arrivals.ARMA.ML <- lme(arrivals_int ~ NFVD_prop, random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+
+
+summary(arrivals.ARMA.ML)
 
 
 ##############################
@@ -350,13 +320,21 @@ expend_int.ARMA <- lme(exp_int ~ NFVD_prop, random=~1|country_code, data = mydat
 
 AIC(expend_int.AR, expend_int.ARMA)
 
-summary(expend_int.ARMA)
-
 grid.arrange(plot(expend_int.ARMA, form = resid(., type = "n") ~ fitted(.), abline = 0),
              plot(expend_int.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),             
              qqnorm(expend_int.ARMA, ~ ranef(.)),
-             qqnorm(expend_int.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(expend_int.ARMA, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(expend_int.ARMA, type = "p"))
+qqline(resid(expend_int.ARMA, type = "p"))
+
+expend_int.ARMA.ML <- lme(exp_int ~ NFVD_prop, random=~1|country_code, data = mydata.log, method = "ML",
+                       control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000),
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+
+summary(expend_int.ARMA.ML)
+
 
 # =======================================================
 # Tourism jobs
@@ -384,31 +362,43 @@ employment.1.AR <- lme(employ ~ NFVD_prop + arrivals_int ,
                        correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
 
+grid.arrange(plot(employment.1.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(employment.1.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
+             plot(employment.1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
+             qqnorm(employment.1.AR, ~ ranef(.)),
+             plot(ACF(employment.1.AR, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(employment.1.AR, type = "p"))
+qqline(resid(employment.1.AR, type = "p"))
+
+employment.1.AR.ML <- lme(employ ~ NFVD_prop + arrivals_int ,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(employment.1.AR.ML)
+
+
 employment.2.AR <- lme(employ ~ NFVD_prop + exp_int,
                        random=~1|country_code, data = mydata.log,
                        correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
 
-summary(employment.1.AR)
 
-grid.arrange(plot(employment.1.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
-             plot(employment.1.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
-             plot(employment.1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
-             qqnorm(employment.1.AR, ~ ranef(.)),
-             qqnorm(employment.1.AR, ~ resid(.), abline = c(0, 1)),
-             plot(ACF(employment.1.AR, resType = "normalized"), alpha = .05))
-
-
-
-summary(employment.2.AR)
 grid.arrange(plot(employment.2.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
              plot(employment.2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(employment.2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(employment.2.AR, ~ ranef(.)),
-             qqnorm(employment.2.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(employment.2.AR, resType = "normalized"), alpha = .05))
 
+qqnorm(resid(employment.2.AR, type = "p"))
+qqline(resid(employment.2.AR, type = "p"))
 
+employment.2.AR.ML <- lme(employ ~ NFVD_prop + exp_int,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+summary(employment.2.AR.ML)
 
 ##############################
 # Establishments
@@ -438,10 +428,19 @@ grid.arrange(plot(establishments.1.ARMA, form = resid(., type = "n") ~ fitted(.)
              plot(establishments.1.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(establishments.1.ARMA, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              qqnorm(establishments.1.ARMA, ~ ranef(.)),
-             qqnorm(establishments.1.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(establishments.1.ARMA, resType = "normalized"), alpha = .05))  
 
-summary(establishments.1.ARMA)
+qqnorm(resid(establishments.1.ARMA, type = "p"))
+qqline(resid(establishments.1.ARMA, type = "p"))
+
+establishments.1.ARMA.ML <- lme(establishments ~ NFVD_prop + arrivals_int, 
+                             random=~1|country_code, data = mydata.log, method = "ML",
+                             correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit,
+                             control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))
+
+summary(establishments.1.ARMA.ML)
+
+
 
 establishments.2.AR <- lme(establishments ~ NFVD_prop + exp_int, 
                            random=~1|country_code, data = mydata.log,
@@ -470,11 +469,17 @@ grid.arrange(plot(establishments.2.ARMA, form = resid(., type = "n") ~ fitted(.)
              plot(establishments.2.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(establishments.2.ARMA, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(establishments.2.ARMA, ~ ranef(.)),
-             qqnorm(establishments.2.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(establishments.2.ARMA, resType = "normalized"), alpha = .05))
 
+qqnorm(resid(establishments.2.ARMA, type = "p"))
+qqline(resid(establishments.2.ARMA, type = "p"))
 
-summary(establishments.2.ARMA)
+establishments.2.ARMA.ML <- lme(establishments ~ NFVD_prop + exp_int, 
+                             random=~1|country_code, data = mydata.log, method = "ML",
+                             correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit,
+                             control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))
+
+summary(establishments.2.ARMA.ML)
 
 
 #===========================================
@@ -517,10 +522,6 @@ VIF_tourism.sub.3 <- corvif(tourism.sub.3)
 # GDP growth
 #######################
 
-I.8.1.1_1 <- lme(Indicator.8.1.1 ~ NFVD_prop + arrivals_int + establishments,
-                    random=~1|country_code, data = mydata.log, na.action = na.omit)
-
-
 I.8.1.1_1.AR <- lme(Indicator.8.1.1 ~ NFVD_prop + arrivals_int + establishments,
                     random=~1|country_code, data = mydata.log, 
                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
@@ -537,12 +538,17 @@ grid.arrange(plot(I.8.1.1_1.AR, form = resid(., type = "n") ~ fitted(.), abline 
              plot(I.8.1.1_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.1.1_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.1.1_1.AR, ~ ranef(.)),
-             qqnorm(I.8.1.1_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.1.1_1.AR, resType = "normalized"), alpha = .05))
 
+qqnorm(resid(I.8.1.1_1.AR, type = "p"))
+qqline(resid(I.8.1.1_1.AR, type = "p"))
+
+I.8.1.1_1.AR.ML <- lme(Indicator.8.1.1 ~ NFVD_prop + arrivals_int + establishments,
+                    random=~1|country_code, data = mydata.log, method = "ML",
+                    correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
 
-summary(I.8.1.1_1.AR)
+summary(I.8.1.1_1.AR.ML)
 
 
 
@@ -562,21 +568,17 @@ grid.arrange(plot(I.8.1.1_2.AR, form = resid(., type = "n") ~ fitted(.), abline 
              plot(I.8.1.1_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.1.1_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.1.1_2.AR, ~ ranef(.)),
-             qqnorm(I.8.1.1_2.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.1.1_2.AR, resType = "normalized"), alpha = .05))
 
+qqnorm(resid(I.8.1.1_2.AR, type = "p"))
+qqline(resid(I.8.1.1_2.AR, type = "p"))
 
-summary(I.8.1.1_2.AR)
+I.8.1.1_2.AR.ML <- lme(Indicator.8.1.1 ~ NFVD_prop + exp_int,
+                    random=~1|country_code, data = mydata.log, method = "ML",
+                    correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
+summary(I.8.1.1_2.AR.ML)
 
-ggplot(mydata.log, aes(x = year, y = employ)) +
-  geom_line(aes(colour = country_code)) +
-  geom_smooth(col = "black")
-
-ggplot(mydata.log, aes(x = employ, y = Indicator.8.1.1)) +
-  geom_point(aes(colour = country_code)) +
-  geom_smooth(aes(colour = country_code)) +
-  facet_wrap(~income_level)
 
 
 
@@ -603,11 +605,17 @@ grid.arrange(plot(I.8.1.1_3.ARMA2, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.8.1.1_3.ARMA2, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.1.1_3.ARMA2, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.8.1.1_3.ARMA2, ~ ranef(.)),
-             qqnorm(I.8.1.1_3.ARMA2, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.1.1_3.ARMA2, resType = "normalized"), alpha = .05))
 
+qqnorm(resid(I.8.1.1_3.ARMA2, type = "p"))
+qqline(resid(I.8.1.1_3.ARMA2, type = "p"))
 
-summary(I.8.1.1_3.ARMA2)
+I.8.1.1_3.ARMA2.ML <- lme(Indicator.8.1.1 ~ NFVD_prop + employ,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corARMA(form=~year|country_code, p = 2, q = 1),na.action = na.omit)
+
+
+summary(I.8.1.1_3.ARMA2.ML)
 
 
 ##########################
@@ -624,10 +632,17 @@ grid.arrange(plot(I.8.1.2_1.AR, form = resid(., type = "n") ~ fitted(.), abline 
              plot(I.8.1.2_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.1.2_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.1.2_1.AR, ~ ranef(.)),
-             qqnorm(I.8.1.2_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.1.2_1.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.1.2_1.AR)
+qqnorm(resid(I.8.1.2_1.AR, type = "p"))
+qqline(resid(I.8.1.2_1.AR, type = "p"))
+
+I.8.1.2_1.AR.ML <- lme(Indicator.8.1.2 ~ NFVD_prop + arrivals_int + establishments,
+                    random=~1|country_code, data = mydata.log, method = "ML",
+                    correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.1.2_1.AR.ML)
 
 
 I.8.1.2_2.AR <- lme(Indicator.8.1.2 ~ NFVD_prop + exp_int,
@@ -639,10 +654,17 @@ grid.arrange(plot(I.8.1.2_2.AR, form = resid(., type = "n") ~ fitted(.), abline 
              plot(I.8.1.2_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.1.2_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.1.2_2.AR, ~ ranef(.)),
-             qqnorm(I.8.1.2_2.AR, ~ resid(., type = "n"), abline = c(0, 1)),
              plot(ACF(I.8.1.2_2.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.1.2_2.AR)
+qqnorm(resid(I.8.1.2_2.AR, type = "p"))
+qqline(resid(I.8.1.2_2.AR, type = "p"))
+
+I.8.1.2_2.AR.ML <- lme(Indicator.8.1.2 ~ NFVD_prop + exp_int,
+                    random=~1|country_code, data = mydata.log, method = "ML",
+                    correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.1.2_2.AR.ML)
 
 
 I.8.1.2_3.AR <- lme(Indicator.8.1.2 ~ NFVD_prop + employ,
@@ -650,17 +672,20 @@ I.8.1.2_3.AR <- lme(Indicator.8.1.2 ~ NFVD_prop + employ,
                  correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
 
-
-
 grid.arrange(plot(I.8.1.2_3.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
              plot(I.8.1.2_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.1.2_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.8.1.2_3.AR, ~ ranef(.)),
-             qqnorm(I.8.1.2_3.AR, ~ resid(., type = "n"), abline = c(0, 1)),
              plot(ACF(I.8.1.2_3.AR, resType = "normalized"), alpha = .05))
 
+qqnorm(resid(I.8.1.2_3.AR, type = "p"))
+qqline(resid(I.8.1.2_3.AR, type = "p"))
 
-summary(I.8.1.2_3.AR)
+I.8.1.2_3.AR.ML <- lme(Indicator.8.1.2 ~ NFVD_prop + employ,
+                    random=~1|country_code, data = mydata.log, method = "ML",
+                    correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+summary(I.8.1.2_3.AR.ML)
 
 
 ###############################
@@ -685,10 +710,17 @@ grid.arrange(plot(I.8.2.1_1.ARMA, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.2.1_1.ARMA, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.2.1_1.ARMA, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.2.1_1.ARMA, ~ ranef(.)),
-             qqnorm(I.8.2.1_1.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.1_1.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.8.2.1_1.AR)
+qqnorm(resid(I.8.2.1_1.ARMA, type = "p"))
+qqline(resid(I.8.2.1_1.ARMA, type = "p"))
+
+I.8.2.1_1.ARMA.ML <- lme(Indicator.8.2.1 ~ NFVD_prop + arrivals_int + establishments,
+                      random=~1|country_code, data = mydata.log, method = "ML",
+                      correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit,
+                      control = list(maxIter = 100, msMaxIter = 100, niterEM = 100))
+
+summary(I.8.2.1_1.ARMA.ML)
 
 
 I.8.2.1_2.AR <- lme(Indicator.8.2.1 ~ NFVD_prop + exp_int,
@@ -699,25 +731,24 @@ I.8.2.1_2.ARMA <- lme(Indicator.8.2.1 ~ NFVD_prop + exp_int,
                       random=~1|country_code, data = mydata.log,control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
 
-I.8.2.1_2.ARMA2 <- lme(Indicator.8.2.1 ~ NFVD_prop + exp_int,
-                       random=~1|country_code, data = mydata.log,control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
-                       correlation=corARMA(form=~year|country_code, p = 2, q = 1),na.action = na.omit)
-
-I.8.2.1_2.ARMA3 <- lme(Indicator.8.2.1 ~ NFVD_prop + exp_int,
-                       random=~1|country_code, data = mydata.log,control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
-                       correlation=corARMA(form=~year|country_code, p = 1, q = 2),na.action = na.omit)
-
 AIC(I.8.2.1_2.AR, I.8.2.1_2.ARMA, I.8.2.1_2.ARMA2, I.8.2.1_2.ARMA3)
 
 grid.arrange(plot(I.8.2.1_2.ARMA, form = resid(., type = "n") ~ fitted(.), abline = 0),
-             plot(I.8.2.1_2.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.2.1_2.ARMA, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.2.1_2.ARMA, ~ ranef(.)),
-             qqnorm(I.8.2.1_2.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.1_2.ARMA, resType = "normalized"), alpha = .05))
 
+qqnorm(resid(I.8.2.1_2.ARMA, type = "p"))
+qqline(resid(I.8.2.1_2.ARMA, type = "p"))
 
-summary(I.8.2.1_2.ARMA)
+
+I.8.2.1_2.ARMA.ML <- lme(Indicator.8.2.1 ~ NFVD_prop + exp_int,
+                      random=~1|country_code, data = mydata.log,control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
+                      correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit, method = "ML")
+
+
+
+summary(I.8.2.1_2.ARMA.ML)
 
 
 
@@ -743,11 +774,18 @@ grid.arrange(plot(I.8.2.1_3.ARMA2, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.8.2.1_3.ARMA2, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.2.1_3.ARMA2, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.2.1_3.ARMA2, ~ ranef(.)),
-             qqnorm(I.8.2.1_3.ARMA2, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.1_3.ARMA2, resType = "normalized"), alpha = .05))
 
+qqnorm(resid(I.8.2.1_3.ARMA2, type = "p"))
+qqline(resid(I.8.2.1_3.ARMA2, type = "p"))
 
-summary(I.8.2.1_3.ARMA)
+I.8.2.1_3.ARMA2.ML <- lme(Indicator.8.2.1 ~ NFVD_prop + employ,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
+                       correlation=corARMA(form=~year|country_code, p = 2, q = 1),na.action = na.omit)
+
+
+summary(I.8.2.1_3.ARMA2.ML)
 
 
 ###################################
@@ -771,10 +809,16 @@ grid.arrange(plot(I.8.2.4_1.ARMA, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.2.4_1.ARMA, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.2.4_1.ARMA, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.2.4_1.ARMA, ~ ranef(.)),
-             qqnorm(I.8.2.4_1.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.4_1.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.8.2.4_1.ARMA)
+qqnorm(resid(I.8.2.4_1.ARMA, type = "p"))
+qqline(resid(I.8.2.4_1.ARMA, type = "p"))
+
+I.8.2.4_1.ARMA.ML <- lme(Indicator.8.2.4 ~ NFVD_prop + arrivals_int + establishments, method = "ML",
+                      random=~1|country_code, data = mydata.log,control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
+                      correlation=corARMA(form=~year|country_code,  p = 1, q = 1),na.action = na.omit)
+
+summary(I.8.2.4_1.ARMA.ML)
 
 
 I.8.2.4_2.AR <- lme(Indicator.8.2.4 ~ NFVD_prop + exp_int,
@@ -791,10 +835,16 @@ grid.arrange(plot(I.8.2.4_2.ARMA, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.2.4_2.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.2.4_2.ARMA, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.2.4_2.ARMA, ~ ranef(.)),
-             qqnorm(I.8.2.4_2.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.4_2.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.8.2.4_2.ARMA)
+qqnorm(resid(I.8.2.4_2.ARMA, type = "p"))
+qqline(resid(I.8.2.4_2.ARMA, type = "p"))
+
+I.8.2.4_2.ARMA.ML <- lme(Indicator.8.2.4 ~ NFVD_prop + exp_int, method = "ML",
+                      random=~1|country_code, data = mydata.log,control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
+                      correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+summary(I.8.2.4_2.ARMA.ML)
 
 
 I.8.2.4_3.AR <- lme(Indicator.8.2.4 ~ NFVD_prop + employ,
@@ -812,12 +862,17 @@ grid.arrange(plot(I.8.2.4_3.ARMA, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.2.4_3.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.2.4_3.ARMA, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.8.2.4_3.ARMA, ~ ranef(.)),
-             qqnorm(I.8.2.4_3.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.4_3.ARMA, resType = "normalized"), alpha = .05))
 
-# outlier
+qqnorm(resid(I.8.2.4_3.ARMA, type = "p"))
+qqline(resid(I.8.2.4_3.ARMA, type = "p"))
 
-summary(I.8.2.4_3.ARMA)
+I.8.2.4_3.ARMA.ML <- lme(Indicator.8.2.4 ~ NFVD_prop + employ, method = "ML",
+                      random=~1|country_code, data = mydata.log,control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
+                      correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+
+summary(I.8.2.4_3.ARMA.ML)
 
 ###############################
 # Employment in services
@@ -838,10 +893,16 @@ grid.arrange(plot(I.8.2.7_1.ARMA, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.2.7_1.ARMA, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.2.7_1.ARMA, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.2.7_1.ARMA, ~ ranef(.)),
-             qqnorm(I.8.2.7_1.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.7_1.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.8.2.7_1.ARMA)
+qqnorm(resid(I.8.2.7_1.ARMA, type = "p"))
+qqline(resid(I.8.2.7_1.ARMA, type = "p"))
+
+I.8.2.7_1.ARMA.ML <- lme(Indicator.8.2.7 ~ NFVD_prop + arrivals_int + establishments, method = "ML",
+                      random=~1|country_code, data = mydata.log, control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
+                      correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+summary(I.8.2.7_1.ARMA.ML)
 
 I.8.2.7_2.AR <- lme(Indicator.8.2.7 ~ NFVD_prop + exp_int,
                  random=~1|country_code, data = mydata.log, control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
@@ -858,10 +919,16 @@ grid.arrange(plot(I.8.2.7_2.ARMA, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.2.7_2.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.2.7_2.ARMA, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.2.7_2.ARMA, ~ ranef(.)),
-             qqnorm(I.8.2.7_2.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.7_2.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.8.2.7_2.ARMA)
+qqnorm(resid(I.8.2.7_2.ARMA, type = "p"))
+qqline(resid(I.8.2.7_2.ARMA, type = "p"))
+
+I.8.2.7_2.ARMA.ML <- lme(Indicator.8.2.7 ~ NFVD_prop + exp_int, method = "ML",
+                      random=~1|country_code, data = mydata.log, control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
+                      correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+summary(I.8.2.7_2.ARMA.ML)
 
 
 I.8.2.7_3.AR <- lme(Indicator.8.2.7 ~ NFVD_prop + employ,
@@ -879,10 +946,16 @@ grid.arrange(plot(I.8.2.7_3.ARMA, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.2.7_3.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.2.7_3.ARMA, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.2.7_3.ARMA, ~ ranef(.)),
-             qqnorm(I.8.2.7_3.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.7_3.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.8.2.7_3.ARMA)
+qqnorm(resid(I.8.2.7_3.ARMA, type = "p"))
+qqline(resid(I.8.2.7_3.ARMA, type = "p"))
+
+I.8.2.7_3.ARMA.ML <- lme(Indicator.8.2.7 ~ NFVD_prop + employ, method = "ML",
+                      random=~1|country_code, data = mydata.log, control = list(maxIter = 100, msMaxIter = 100, niterEM = 100),
+                      correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+summary(I.8.2.7_3.ARMA.ML)
 
 ###############################
 # GNI growth
@@ -906,10 +979,16 @@ grid.arrange(plot(I.8.2.11_1.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.8.2.11_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.2.11_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.2.11_1.AR, ~ ranef(.)),
-             qqnorm(I.8.2.11_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.11_1.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.2.11_1.AR)
+qqnorm(resid(I.8.2.11_1.AR, type = "p"))
+qqline(resid(I.8.2.11_1.AR, type = "p"))
+
+I.8.2.11_1.AR.ML <- lme(Indicator.8.2.11 ~ NFVD_prop + arrivals_int + establishments,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+summary(I.8.2.11_1.AR.ML)
 
 
 
@@ -928,10 +1007,16 @@ grid.arrange(plot(I.8.2.11_2.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.8.2.11_2.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.2.11_2.ARMA, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.2.11_2.ARMA, ~ ranef(.)),
-             qqnorm(I.8.2.11_2.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.11_2.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.8.2.11_2.ARMA)
+qqnorm(resid(I.8.2.11_2.ARMA, type = "p"))
+qqline(resid(I.8.2.11_2.ARMA, type = "p"))
+
+I.8.2.11_2.ARMA.ML <- lme(Indicator.8.2.11 ~ NFVD_prop + exp_int,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+summary(I.8.2.11_2.ARMA.ML)
 
 
 I.8.2.11_3.AR <- lme(Indicator.8.2.11 ~ NFVD_prop + employ,
@@ -950,10 +1035,16 @@ grid.arrange(plot(I.8.2.11_3.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.8.2.11_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.2.11_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.8.2.11_3.AR, ~ ranef(.)),
-             qqnorm(I.8.2.11_3.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.2.11_3.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.2.11_3.AR)
+qqnorm(resid(I.8.2.11_3.AR, type = "p"))
+qqline(resid(I.8.2.11_3.AR, type = "p"))
+
+I.8.2.11_3.AR.ML <- lme(Indicator.8.2.11 ~ NFVD_prop + employ,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+summary(I.8.2.11_3.AR.ML)
 
 
 ################################
@@ -979,27 +1070,39 @@ grid.arrange(plot(I.8.5.5_1.AR, form = resid(., type = "n") ~ fitted(.), abline 
              plot(I.8.5.5_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.5.5_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.5.5_1.AR, ~ ranef(.)),
-             qqnorm(I.8.5.5_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.5.5_1.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.5.5_1.AR)
+qqnorm(resid(I.8.5.5_1.AR, type = "p"))
+qqline(resid(I.8.5.5_1.AR, type = "p"))
 
+I.8.5.5_1.AR.ML <- lme(Indicator.8.5.5  ~ NFVD_prop + arrivals_int + establishments,
+                    random=~1|country_code, data = mydata.log, method = "ML",
+                    correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.5.5_1.AR.ML)
 
 
 I.8.5.5_2.AR <- lme(Indicator.8.5.5 ~ NFVD_prop + exp_int,
                  random=~1|country_code, data = mydata.log,
                  correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
-
-
 grid.arrange(plot(I.8.5.5_2.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
              plot(I.8.5.5_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.5.5_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
-             qqnorm(I.8.5.5_2.AR, ~ ranef(.)),
-             qqnorm(I.8.5.5_2.AR, ~ resid(.), abline = c(0, 1)),
+             qqnorm(I.8.5.5_2.AR, ~ranef(.)),
              plot(ACF(I.8.5.5_2.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.5.5_2.AR)
+qqnorm(resid(I.8.5.5_2.AR, type = "p"))
+qqline(resid(I.8.5.5_2.AR, type = "p"))
+
+
+I.8.5.5_2.AR.ML <- lme(Indicator.8.5.5 ~ NFVD_prop + exp_int,
+                    random=~1|country_code, data = mydata.log, method = "ML",
+                    correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.5.5_2.AR.ML)
 
 
 
@@ -1008,16 +1111,21 @@ I.8.5.5_3.AR <- lme(Indicator.8.5.5 ~ NFVD_prop + employ,
                  correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
 
-
-
 grid.arrange(plot(I.8.5.5_3.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
              plot(I.8.5.5_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.5.5_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
-             qqnorm(I.8.5.5_3.AR, ~ ranef(.)),
-             qqnorm(I.8.5.5_3.AR, ~ resid(.), abline = c(0, 1)),
+             qqnorm(I.8.5.5_3.AR, ~ranef(.)),
              plot(ACF(I.8.5.5_3.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.5.5_3.AR)
+qqnorm(resid(I.8.5.5_3.AR, type = "p"))
+qqline(resid(I.8.5.5_3.AR, type = "p"))
+
+I.8.5.5_3.AR.ML <- lme(Indicator.8.5.5 ~ NFVD_prop + employ,
+                      random=~1|country_code, data = mydata.log, method = "ML",
+                      correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.5.5_3.AR.ML)
 
 # Unemployment youth
 
@@ -1031,10 +1139,17 @@ grid.arrange(plot(I.8.5.11_1.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.8.5.11_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.5.11_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.5.11_1.AR, ~ ranef(.)),
-             qqnorm(I.8.5.11_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.5.11_1.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.5.11_1.AR)
+qqnorm(resid(I.8.5.11_1.AR, type = "p"))
+qqline(resid(I.8.5.11_1.AR, type = "p"))
+
+I.8.5.11_1.AR.ML <- lme(Indicator.8.5.11  ~ NFVD_prop + arrivals_int + establishments,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.5.11_1.AR.ML)
 
 
 I.8.5.11_2.AR <- lme(Indicator.8.5.11 ~ NFVD_prop + exp_int,
@@ -1045,10 +1160,17 @@ grid.arrange(plot(I.8.5.11_2.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.8.5.11_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.5.11_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.5.11_2.AR, ~ ranef(.)),
-             qqnorm(I.8.5.11_2.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.5.11_2.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.5.11_2.AR)
+qqnorm(resid(I.8.5.11_2.AR, type = "p"))
+qqline(resid(I.8.5.11_2.AR, type = "p"))
+
+I.8.5.11_2.AR.ML <- lme(Indicator.8.5.11 ~ NFVD_prop + exp_int,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.5.11_2.AR.ML)
 
 
 
@@ -1060,10 +1182,17 @@ grid.arrange(plot(I.8.5.11_3.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.8.5.11_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.5.11_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.8.5.11_3.AR, ~ ranef(.)),
-             qqnorm(I.8.5.11_3.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.5.11_3.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.5.11_3.AR)
+qqnorm(resid(I.8.5.11_3.AR, type = "p"))
+qqline(resid(I.8.5.11_3.AR, type = "p"))
+
+I.8.5.11_3.AR.ML <- lme(Indicator.8.5.11 ~ NFVD_prop + employ,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.5.11_3.AR.ML)
 
 
 # Waged and salaried workers
@@ -1095,25 +1224,41 @@ grid.arrange(plot(I.8.5.15_1.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.8.5.15_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.5.15_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.5.15_1.AR, ~ ranef(.)),
-             qqnorm(I.8.5.15_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.5.15_1.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.5.15_1.ARMA5)
+qqnorm(resid(I.8.5.15_1.AR, type = "p"))
+qqline(resid(I.8.5.15_1.AR, type = "p"))
+
+I.8.5.15_1.AR.ML <- lme(Indicator.8.5.15  ~ NFVD_prop + arrivals_int + establishments,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.5.15_1.AR.ML)
 
 
 I.8.5.15_2.AR <- lme(Indicator.8.5.15 ~ NFVD_prop + exp_int,
                   random=~1|country_code, data = mydata.log,
                   correlation=corAR1(form=~year|country_code),na.action = na.omit)
 
-
 grid.arrange(plot(I.8.5.15_2.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
-             plot(I.8.5.15_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.5.15_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.5.15_2.AR, ~ ranef(.)),
-             qqnorm(I.8.5.15_2.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.5.15_2.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.5.15_2.AR)
+qqnorm(resid(I.8.5.15_2.AR, type = "p"))
+qqline(resid(I.8.5.15_2.AR, type = "p"))
+
+
+
+I.8.5.15_2.AR.ML <- lme(Indicator.8.5.15 ~ NFVD_prop + exp_int,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.5.15_2.AR.ML)
+
+
 
 I.8.5.15_3.AR <- lme(Indicator.8.5.15 ~ NFVD_prop + employ,
                   random=~1|country_code, data = mydata.log,
@@ -1124,10 +1269,17 @@ grid.arrange(plot(I.8.5.15_3.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.8.5.15_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.5.15_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.8.5.15_3.AR, ~ ranef(.)),
-             qqnorm(I.8.5.15_3.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.5.15_3.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.5.15_3.AR)
+qqnorm(resid(I.8.5.15_3.AR, type = "p"))
+qqline(resid(I.8.5.15_3.AR, type = "p"))
+
+I.8.5.15_3.AR.ML <- lme(Indicator.8.5.15 ~ NFVD_prop + employ,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.5.15_3.AR.ML)
 
 #################################
 # Access to banking
@@ -1143,10 +1295,17 @@ grid.arrange(plot(I.8.10.10_1.AR, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.10.10_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.8.10.10_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.8.10.10_1.AR, ~ ranef(.)),
-             qqnorm(I.8.10.10_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.10.10_1.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.10.10_1.AR)
+qqnorm(resid(I.8.10.10_1.AR, type = "p"))
+qqline(resid(I.8.10.10_1.AR, type = "p"))
+
+I.8.10.10_1.AR.ML <- lme(Indicator.8.10.10  ~ NFVD_prop + arrivals_int + establishments,
+                      random=~1|country_code, data = mydata.log, method = "ML",
+                      correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.10.10_1.AR.ML)
 
 
 I.8.10.10_2.AR <- lme(Indicator.8.10.10 ~ NFVD_prop + exp_int,
@@ -1159,10 +1318,17 @@ grid.arrange(plot(I.8.10.10_2.AR, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.10.10_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.10.10_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.8.10.10_2.AR, ~ ranef(.)),
-             qqnorm(I.8.10.10_2.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.10.10_2.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.10.10_2.ARMA2)
+qqnorm(resid(I.8.10.10_2.AR, type = "p"))
+qqline(resid(I.8.10.10_2.AR, type = "p"))
+
+I.8.10.10_2.AR.ML <- lme(Indicator.8.10.10 ~ NFVD_prop + exp_int,
+                      random=~1|country_code, data = mydata.log, method = "ML",
+                      correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.10.10_2.AR.ML)
 
 
 I.8.10.10_3.AR <- lme(Indicator.8.10.10 ~ NFVD_prop + employ,
@@ -1174,10 +1340,17 @@ grid.arrange(plot(I.8.10.10_3.AR, form = resid(., type = "n") ~ fitted(.), ablin
              plot(I.8.10.10_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.8.10.10_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.8.10.10_3.AR, ~ ranef(.)),
-             qqnorm(I.8.10.10_3.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.8.10.10_3.AR, resType = "normalized"), alpha = .05))
 
-summary(I.8.10.10_3.ARMA)
+qqnorm(resid(I.8.10.10_3.AR, type = "p"))
+qqline(resid(I.8.10.10_3.AR, type = "p"))
+
+I.8.10.10_3.AR.ML <- lme(Indicator.8.10.10 ~ NFVD_prop + employ,
+                      random=~1|country_code, data = mydata.log, method = "ML",
+                      correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.8.10.10_3.AR.ML)
 
 
 #===========================================
@@ -1204,11 +1377,17 @@ grid.arrange(plot(I.12.2.1_1.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.12.2.1_1.ARMA, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.12.2.1_1.ARMA, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.12.2.1_1.ARMA, ~ ranef(.)),
-             qqnorm(I.12.2.1_1.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.12.2.1_1.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.12.2.1_1.ARMA)
+qqnorm(resid(I.12.2.1_1.ARMA, type = "p"))
+qqline(resid(I.12.2.1_1.ARMA, type = "p"))
 
+I.12.2.1_1.ARMA.ML <- lme(Indicator.12.2.1  ~ NFVD_prop + arrivals_int + establishments,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+
+summary(I.12.2.1_1.ARMA.ML)
 
 
 I.12.2.1_2.AR <- lme(Indicator.12.2.1  ~ NFVD_prop + exp_int,
@@ -1225,10 +1404,18 @@ grid.arrange(plot(I.12.2.1_2.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.12.2.1_2.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.12.2.1_2.ARMA, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.12.2.1_2.ARMA, ~ ranef(.)),
-             qqnorm(I.12.2.1_2.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.12.2.1_2.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.12.2.1_2.ARMA)
+qqnorm(resid(I.12.2.1_2.ARMA, type = "p"))
+qqline(resid(I.12.2.1_2.ARMA, type = "p"))
+
+
+I.12.2.1_2.ARMA.ML <- lme(Indicator.12.2.1  ~ NFVD_prop + exp_int,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+
+summary(I.12.2.1_2.ARMA.ML)
 
 
 I.12.2.1_3.AR <- lme(Indicator.12.2.1  ~ NFVD_prop + employ,
@@ -1244,13 +1431,22 @@ I.12.2.1_3.ARMA <- lme(Indicator.12.2.1  ~ NFVD_prop + employ,
 AIC(I.12.2.1_3.AR, I.12.2.1_3.ARMA)
 
 grid.arrange(plot(I.12.2.1_3.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
-             plot(I.12.2.1_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
+             plot(I.12.2.1_2.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.12.2.1_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.12.2.1_3.AR, ~ ranef(.)),
-             qqnorm(I.12.2.1_3.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.12.2.1_3.AR, resType = "normalized"), alpha = .05))
 
-summary(I.12.2.1_3.AR)
+qqnorm(resid(I.12.2.1_3.AR, type = "p"))
+qqline(resid(I.12.2.1_3.AR, type = "p"))
+
+
+I.12.2.1_3.AR.ML <- lme(Indicator.12.2.1  ~ NFVD_prop + employ,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+
+summary(I.12.2.1_3.AR.ML)
 
 
 
@@ -1276,14 +1472,22 @@ I.14.4.1_1.ARMA <- lme(Indicator.14.4.1  ~ NFVD_prop + arrivals_int + establishm
 AIC(I.14.4.1_1.AR, I.14.4.1_1.ARMA)
 
 grid.arrange(plot(I.14.4.1_1.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
-             plot(I.14.4.1_1.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
+             plot(I.14.4.1_1.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0), 
              plot(I.14.4.1_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.14.4.1_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.14.4.1_1.AR, ~ ranef(.)),
-             qqnorm(I.14.4.1_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.14.4.1_1.AR, resType = "normalized"), alpha = .05))
 
-summary(I.14.4.1_1.AR)
+qqnorm(resid(I.14.4.1_1.AR, type = "p"))
+qqline(resid(I.14.4.1_1.AR, type = "p"))
+
+
+I.14.4.1_1.AR.ML <- lme(Indicator.14.4.1  ~ NFVD_prop + arrivals_int + establishments,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.14.4.1_1.AR.ML)
 
 
 
@@ -1299,13 +1503,21 @@ I.14.4.1_2.ARMA <- lme(Indicator.14.4.1  ~ NFVD_prop + exp_int,
 AIC(I.14.4.1_2.AR, I.14.4.1_2.ARMA)
 
 grid.arrange(plot(I.14.4.1_2.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
-             plot(I.14.4.1_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
+             plot(I.14.4.1_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),  
              plot(I.14.4.1_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.14.4.1_2.AR, ~ ranef(.)),
-             qqnorm(I.14.4.1_2.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.14.4.1_2.AR, resType = "normalized"), alpha = .05))
 
-summary(I.14.4.1_2.AR)
+qqnorm(resid(I.14.4.1_2.AR, type = "p"))
+qqline(resid(I.14.4.1_2.AR, type = "p"))
+
+
+I.14.4.1_2.AR.ML <- lme(Indicator.14.4.1  ~ NFVD_prop + exp_int,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.14.4.1_2.AR.ML)
 
 
 
@@ -1321,14 +1533,22 @@ I.14.4.1_3.ARMA <- lme(Indicator.14.4.1  ~ NFVD_prop + employ,
 
 AIC(I.14.4.1_3.AR, I.14.4.1_3.ARMA)
 
-grid.arrange(plot(I.14.4.1_3.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
+grid.arrange(plot(I.14.4.1_3.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),            
              plot(I.14.4.1_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.14.4.1_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.14.4.1_3.AR, ~ ranef(.)),
-             qqnorm(I.14.4.1_3.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.14.4.1_3.AR, resType = "normalized"), alpha = .05))
 
-summary(I.14.4.1_3.AR)
+qqnorm(resid(I.14.4.1_3.AR, type = "p"))
+qqline(resid(I.14.4.1_3.AR, type = "p"))
+
+
+I.14.4.1_3.AR.ML <- lme(Indicator.14.4.1  ~ NFVD_prop + employ,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.14.4.1_3.AR.ML)
 
 ##########################
 # Capture fisheries
@@ -1349,10 +1569,16 @@ grid.arrange(plot(I.14.4.2_1.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.14.4.2_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.14.4.2_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.14.4.2_1.AR, ~ ranef(.)),
-             qqnorm(I.14.4.2_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.14.4.2_1.AR, resType = "normalized"), alpha = .05))
 
-summary(I.14.4.2_1.AR)
+qqnorm(resid(I.14.4.2_1.AR, type = "p"))
+qqline(resid(I.14.4.2_1.AR, type = "p"))
+
+I.14.4.2_1.AR.ML <- lme(Indicator.14.4.2  ~ NFVD_prop + arrivals_int + establishments,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+summary(I.14.4.2_1.AR.ML)
 
 
 I.14.4.2_2.AR <- lme(Indicator.14.4.2  ~ NFVD_prop + exp_int,
@@ -1369,10 +1595,16 @@ grid.arrange(plot(I.14.4.2_2.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.14.4.2_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.14.4.2_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.14.4.2_2.AR, ~ ranef(.)),
-             qqnorm(I.14.4.2_2.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.14.4.2_2.AR, resType = "normalized"), alpha = .05))
 
-summary(I.14.4.2_2.AR)
+qqnorm(resid(I.14.4.2_2.AR, type = "p"))
+qqline(resid(I.14.4.2_2.AR, type = "p"))
+
+I.14.4.2_2.AR.ML <- lme(Indicator.14.4.2  ~ NFVD_prop + exp_int,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+summary(I.14.4.2_2.AR.ML)
 
 
 I.14.4.2_3.AR <- lme(Indicator.14.4.2  ~ NFVD_prop + employ,
@@ -1399,10 +1631,16 @@ grid.arrange(plot(I.14.4.2_3.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.14.4.2_3.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.14.4.2_3.ARMA, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.14.4.2_3.ARMA, ~ ranef(.)),
-             qqnorm(I.14.4.2_3.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.14.4.2_3.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.14.4.2_3.ARMA)
+qqnorm(resid(I.14.4.2_3.ARMA, type = "p"))
+qqline(resid(I.14.4.2_3.ARMA, type = "p"))
+
+I.14.4.2_3.ARMA.ML <- lme(Indicator.14.4.2  ~ NFVD_prop + employ,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+summary(I.14.4.2_3.ARMA.ML)
 
 
 #######################################
@@ -1430,10 +1668,19 @@ grid.arrange(plot(I.14.4.3_1.ARMA2, form = resid(., type = "n") ~ fitted(.), abl
              plot(I.14.4.3_1.ARMA2, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.14.4.3_1.ARMA2, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.14.4.3_1.ARMA2, ~ ranef(.)),
-             qqnorm(I.14.4.3_1.ARMA2, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.14.4.3_1.ARMA2, resType = "normalized"), alpha = .05))
 
-summary(I.14.4.3_1.ARMA2)
+qqnorm(resid(I.14.4.3_1.ARMA2, type = "p"))
+qqline(resid(I.14.4.3_1.ARMA2, type = "p"))
+
+I.14.4.3_1.ARMA2.ML <- lme(Indicator.14.4.3  ~ NFVD_prop + arrivals_int + establishments,
+                        random=~1|country_code, data = mydata.log, method = "ML",
+                        correlation=corARMA(form=~year|country_code, p = 2, q = 1),na.action = na.omit,
+                        control = list(maxIter = 10000, msMaxIter = 10000, niterEM = 10000, msMaxEval = 10000))
+
+summary(I.14.4.3_1.ARMA2.ML)
+
+
 
 I.14.4.3_2.AR <- lme(Indicator.14.4.3  ~ NFVD_prop + exp_int,
                   random=~1|country_code, data = mydata.log,
@@ -1449,10 +1696,17 @@ grid.arrange(plot(I.14.4.3_2.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.14.4.3_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.14.4.3_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.14.4.3_2.AR, ~ ranef(.)),
-             qqnorm(I.14.4.3_2.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.14.4.3_2.AR, resType = "normalized"), alpha = .05))
 
-summary(I.14.4.3_2.AR)
+qqnorm(resid(I.14.4.3_2.AR, type = "p"))
+qqline(resid(I.14.4.3_2.AR, type = "p"))
+
+I.14.4.3_2.AR.ML <- lme(Indicator.14.4.3  ~ NFVD_prop + exp_int,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+
+summary(I.14.4.3_2.AR.ML)
 
 
 I.14.4.3_3.AR <- lme(Indicator.14.4.3  ~ NFVD_prop + employ,
@@ -1470,10 +1724,17 @@ grid.arrange(plot(I.14.4.3_3.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.14.4.3_3.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.14.4.3_3.ARMA, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.14.4.3_3.ARMA, ~ ranef(.)),
-             qqnorm(I.14.4.3_3.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.14.4.3_3.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.14.4.3_3.ARMA)
+qqnorm(resid(I.14.4.3_3.ARMA, type = "p"))
+qqline(resid(I.14.4.3_3.ARMA, type = "p"))
+
+I.14.4.3_3.ARMA.ML <- lme(Indicator.14.4.3  ~ NFVD_prop + employ,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit,
+                       control = list(maxIter = 10000, msMaxIter = 10000, niterEM = 10000, msMaxEval = 10000))
+
+summary(I.14.4.3_3.ARMA.ML)
 
 
 #===========================================
@@ -1502,10 +1763,17 @@ grid.arrange(plot(I.15.1.1_1.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.15.1.1_1.ARMA, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.15.1.1_1.ARMA, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.15.1.1_1.ARMA, ~ ranef(.)),
-             qqnorm(I.15.1.1_1.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.15.1.1_1.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.15.1.1_1.ARMA)
+qqnorm(resid(I.15.1.1_1.ARMA, type = "p"))
+qqline(resid(I.15.1.1_1.ARMA, type = "p"))
+
+I.15.1.1_1.ARMA.ML <- lme(Indicator.15.1.1  ~ NFVD_prop + arrivals_int + establishments,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       control = list(maxIter = 10000, msMaxIter = 10000, niterEM = 10000, msMaxEval = 10000),
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+summary(I.15.1.1_1.ARMA.ML)
 
 
 
@@ -1525,10 +1793,17 @@ grid.arrange(plot(I.15.1.1_2.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.15.1.1_2.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.15.1.1_2.ARMA, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.15.1.1_2.ARMA, ~ ranef(.)),
-             qqnorm(I.15.1.1_2.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.15.1.1_2.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.15.1.1_2.ARMA)
+qqnorm(resid(I.15.1.1_2.ARMA, type = "p"))
+qqline(resid(I.15.1.1_2.ARMA, type = "p"))
+
+I.15.1.1_2.ARMA.ML <- lme(Indicator.15.1.1  ~ NFVD_prop + exp_int,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit,
+                       control = list(maxIter = 10000, msMaxIter = 10000, niterEM = 10000, msMaxEval = 10000))
+
+summary(I.15.1.1_2.ARMA.ML)
 
 
 I.15.1.1_3.AR <- lme(Indicator.15.1.1  ~ NFVD_prop + employ,
@@ -1546,10 +1821,17 @@ grid.arrange(plot(I.15.1.1_3.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.15.1.1_3.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.15.1.1_3.ARMA, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.15.1.1_3.ARMA, ~ ranef(.)),
-             qqnorm(I.15.1.1_3.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.15.1.1_3.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.15.1.1_3.ARMA)
+qqnorm(resid(I.15.1.1_3.ARMA, type = "p"))
+qqline(resid(I.15.1.1_3.ARMA, type = "p"))
+
+I.15.1.1_3.ARMA.ML <- lme(Indicator.15.1.1  ~ NFVD_prop + employ,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       control = list(maxIter = 10000, msMaxIter = 10000, niterEM = 10000, msMaxEval = 10000),
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+summary(I.15.1.1_3.ARMA.ML)
 
 
 ########################################
@@ -1573,10 +1855,16 @@ grid.arrange(plot(I.15.4.1_1.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.15.4.1_1.ARMA, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.15.4.1_1.ARMA, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.15.4.1_1.ARMA, ~ ranef(.)),
-             qqnorm(I.15.4.1_1.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.15.4.1_1.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.15.4.1_1.ARMA2)
+qqnorm(resid(I.15.4.1_1.ARMA, type = "p"))
+qqline(resid(I.15.4.1_1.ARMA, type = "p"))
+
+I.15.4.1_1.ARMA.ML <- lme(Indicator.15.4.1  ~ NFVD_prop + arrivals_int + establishments,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit)
+
+summary(I.15.4.1_1.ARMA.ML)
 
 
 I.15.4.1_2.AR <- lme(Indicator.15.4.1  ~ NFVD_prop + exp_int,
@@ -1595,10 +1883,17 @@ grid.arrange(plot(I.15.4.1_2.ARMA, form = resid(., type = "n") ~ fitted(.), abli
              plot(I.15.4.1_2.ARMA, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.15.4.1_2.ARMA, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.15.4.1_2.ARMA, ~ ranef(.)),
-             qqnorm(I.15.4.1_2.ARMA, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.15.4.1_2.ARMA, resType = "normalized"), alpha = .05))
 
-summary(I.15.4.1_2.ARMA)
+qqnorm(resid(I.15.4.1_2.ARMA, type = "p"))
+qqline(resid(I.15.4.1_2.ARMA, type = "p"))
+
+I.15.4.1_2.ARMA.ML <- lme(Indicator.15.4.1  ~ NFVD_prop + exp_int,
+                       random=~1|country_code, data = mydata.log, method = "ML",
+                       correlation=corARMA(form=~year|country_code, p = 1, q = 1),na.action = na.omit,
+                       control = list(maxIter = 10000, msMaxIter = 10000, niterEM = 10000, msMaxEval = 10000))
+
+summary(I.15.4.1_2.ARMA.ML)
 
 
 
@@ -1618,10 +1913,16 @@ grid.arrange(plot(I.15.4.1_3.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.15.4.1_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.15.4.1_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.15.4.1_3.AR, ~ ranef(.)),
-             qqnorm(I.15.4.1_3.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.15.4.1_3.AR, resType = "normalized"), alpha = .05))
 
-summary(I.15.4.1_3.AR)
+qqnorm(resid(I.15.4.1_3.AR, type = "p"))
+qqline(resid(I.15.4.1_3.AR, type = "p"))
+
+I.15.4.1_3.AR.ML <- lme(Indicator.15.4.1  ~ NFVD_prop + employ,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+summary(I.15.4.1_3.AR.ML)
 
 
 #######################################
@@ -1645,12 +1946,16 @@ grid.arrange(plot(I.15.5.1_1.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.15.5.1_1.AR, form = resid(., type = "n") ~ arrivals_int, abline = 0),
              plot(I.15.5.1_1.AR, form = resid(., type = "n") ~ establishments, abline = 0),
              qqnorm(I.15.5.1_1.AR, ~ ranef(.)),
-             qqnorm(I.15.5.1_1.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.15.5.1_1.AR, resType = "normalized"), alpha = .05))
 
-hist(resid(I.15.5.1_1.AR))
+qqnorm(resid(I.15.5.1_1.AR, type = "p"))
+qqline(resid(I.15.5.1_1.AR, type = "p"))
 
-summary(I.15.5.1_1.AR)
+I.15.5.1_1.AR.ML <- lme(Indicator.15.5.1  ~ NFVD_prop + arrivals_int + establishments,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit)
+
+summary(I.15.5.1_1.AR.ML)
 
 
 I.15.5.1_2.AR <- lme(Indicator.15.5.1  ~ NFVD_prop + exp_int,
@@ -1670,10 +1975,17 @@ grid.arrange(plot(I.15.5.1_2.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.15.5.1_2.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.15.5.1_2.AR, form = resid(., type = "n") ~ exp_int, abline = 0),
              qqnorm(I.15.5.1_2.AR, ~ ranef(.)),
-             qqnorm(I.15.5.1_2.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.15.5.1_2.AR, resType = "normalized"), alpha = .05))
 
-summary(I.15.5.1_2.AR)
+qqnorm(resid(I.15.5.1_2.AR, type = "p"))
+qqline(resid(I.15.5.1_2.AR, type = "p"))
+
+I.15.5.1_2.AR.ML <- lme(Indicator.15.5.1  ~ NFVD_prop + exp_int,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit,
+                     control = list(maxIter = 10000, msMaxIter = 10000, niterEM = 10000, msMaxEval = 10000))
+
+summary(I.15.5.1_2.AR.ML)
 
 
 
@@ -1699,9 +2011,16 @@ grid.arrange(plot(I.15.5.1_3.AR, form = resid(., type = "n") ~ fitted(.), abline
              plot(I.15.5.1_3.AR, form = resid(., type = "n") ~ NFVD_prop, abline = 0),
              plot(I.15.5.1_3.AR, form = resid(., type = "n") ~ employ, abline = 0),
              qqnorm(I.15.5.1_3.AR, ~ ranef(.)),
-             qqnorm(I.15.5.1_3.AR, ~ resid(.), abline = c(0, 1)),
              plot(ACF(I.15.5.1_3.AR, resType = "normalized"), alpha = .05))
 
-summary(I.15.5.1_3.AR)
+qqnorm(resid(I.15.5.1_3.AR, type = "p"))
+qqline(resid(I.15.5.1_3.AR, type = "p"))
+
+I.15.5.1_3.AR.ML <- lme(Indicator.15.5.1  ~ NFVD_prop + employ,
+                     random=~1|country_code, data = mydata.log, method = "ML",
+                     correlation=corAR1(form=~year|country_code),na.action = na.omit,
+                     control = list(maxIter = 10000, msMaxIter = 10000, niterEM = 10000, msMaxEval = 10000))
+
+summary(I.15.5.1_3.AR.ML)
 
 
