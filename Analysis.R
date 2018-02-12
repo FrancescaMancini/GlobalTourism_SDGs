@@ -2023,4 +2023,261 @@ I.15.5.1_3.AR.ML <- lme(Indicator.15.5.1  ~ NFVD_prop + employ,
 
 summary(I.15.5.1_3.AR.ML)
 
+#####################################
+## Effect of tourism on PA coverage
+#####################################
+
+library(plyr)
+
+mydata <- read.table("integrated.txt", header = T)
+
+mydata <- mydata[c(1:2,24:34,3:23,35:67)]
+
+mydata <- mydata[,c(names(mydata)[1:12],sort(names(mydata)[13:67]))] 
+
+# exclude all data for grouped countries (e.g. Europe, Asia etc.)
+
+# make country_code a character string
+mydata$country_code <- as.character(mydata$country_code)
+
+# codes for grouped countries
+grouped <- c("ARB", "CSS", "CEB", "EAR", "EAS", "EAP", "TEA", "EMU", "ECS", 
+             "ECA", "TEC", "EUU", "FCS", "HPC", "HIC", "IBD", "IBT", "IDB", 
+             "IDX", "IDA", "LTE", "LCN", "LAC", "TLA", "LDC", "LMY", "LIC", 
+             "LMC", "MEA", "MNA", "TMN", "MIC", "NAC", "OED", "OSS", "PSS", 
+             "PST", "PRE", "SST", "SAS", "TSA", "SSF", "SSA", "TSS", "UMC", "WLD")
+
+# delete grouped countries from combined dataset             
+mydata <- mydata[-which(mydata$country_code %in% grouped),]
+
+# make country_code a factor again
+mydata$country_code <- as.factor(mydata$country_code)
+
+# function to calculate yearly rate of change in time series
+rateChange<- function(x) { 
+  c(NA, (diff(x, 1)))
+}
+
+# exclude observations outside 2004-2014 period
+mydata_sub <- mydata[-which(mydata$year<2004 | mydata$year>2014),]
+# order dataset by year
+mydata_sub <- mydata_sub[order(mydata_sub$year), ] 
+# calculate yearly rate of change for every tourism time series and add it as a variable to mydata_sub
+mydata_sub <- ddply(mydata_sub, "country_code", transform, arrivals_int_change = rateChange(arrivals_int))
+mydata_sub <- ddply(mydata_sub, "country_code", transform, exp_int_change = rateChange(exp_int))
+mydata_sub <- ddply(mydata_sub, "country_code", transform, employ_change = rateChange(employ))
+mydata_sub <- ddply(mydata_sub, "country_code", transform, establish_change = rateChange(establishments))
+mydata_sub <- ddply(mydata_sub, "country_code", transform, NFVD_change = rateChange(NFVD_prop))
+
+# calculate the mean yearly rate of change for each country and tourism time series
+arrivals_int_change <- aggregate(mydata_sub$arrivals_int_change ~ 
+                                   mydata_sub$country_code, FUN = mean)
+
+names(arrivals_int_change) <- c("country_code", "arrivals_int_change")
+
+exp_int_change <- aggregate(mydata_sub$exp_int_change ~ 
+                              mydata_sub$country_code, FUN = mean)
+
+names(exp_int_change) <- c("country_code", "exp_int_change")
+
+employ_change <- aggregate(mydata_sub$employ_change ~ 
+                             mydata_sub$country_code, FUN = mean)
+
+names(employ_change) <- c("country_code", "employ_change")
+
+establish_change <- aggregate(mydata_sub$establish_change ~ 
+                                mydata_sub$country_code, FUN = mean)
+
+names(establish_change) <- c("country_code", "establish_change")
+
+NFVD_change <- aggregate(mydata_sub$NFVD_change ~
+                           mydata_sub$country_code, FUN = mean)
+
+names(NFVD_change) <- c("country_code", "NFVD_change")
+
+
+#### terrestrial PAs ####
+
+# calcuate difference between PA coverage in 2014 and PA_coverage in 2004
+PA_cov <- ddply(mydata, "country_code", summarize,
+                PA_change = Indicator.15.1.4[year == 2014] -
+                  Indicator.15.1.4[year == 2000])
+
+# merge all into one dataset
+PA_df <- Reduce(function(x, y) merge(x, y, by = "country_code", all=TRUE), 
+                list(PA_cov, arrivals_int_change, exp_int_change, employ_change, establish_change, NFVD_change))
+
+
+# visualise change in PA
+# change in protected area coverage between 2004-2014
+library(ggplot2)
+library(viridis)
+library(rworldmap)
+
+# download a world map at a coarse resolution
+world <- getMap(resolution = "coarse")
+# plot(world)
+
+# change names of count columns 
+names(PA_df)[1] <- "ISO3"
+
+
+# merge the datasets so every country in the world dataset has the count of VD and NVD
+# all.x = T makes sure that we retain all countries, even those that have no pictures
+world@data <- merge (world@data, PA_df, by = "ISO3", all.x = TRUE) 
+# make NAs 0s
+#world@data$NFVD[which(is.na(world@data$NFVD)==TRUE)] <- 0
+
+
+# convert world map into a format readable by ggplot2
+world_df <- fortify(world)
+# merge the fortified dataset and the result of the previous merge
+#by.x and by.y are different because column names are different
+world_df <- merge(world_df, world@data, by.x = "id", by.y = "ADMIN", all.x = TRUE)  
+
+country_year_maps <- function(data, xcol, ycol, group, value) {
+  map <- ggplot() + 
+    geom_polygon(data = data, aes_string(x = xcol, y = ycol, group = group, fill =
+                                           value), colour = "black", size = 0.25) +
+    coord_fixed() +
+    scale_fill_viridis()+
+    #facet_wrap(~year)+
+    theme(panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.background = element_blank(),
+          plot.background = element_blank(),
+          axis.line = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          plot.title = element_blank())
+  
+  plot(map)   
+}
+
+country_year_maps(data = world_df, xcol = "long", ycol = "lat", group = "group", value = "PA_change")
+
+
+# analysis
+
+# add income level
+income <- read.csv("Income_level.csv", header = T, colClasses = c("factor", "NULL", "factor"), sep = ",")
+PA_df <- merge (PA_df, income, by = "country_code")
+
+
+plot(sqrt(PA_change) ~ sqrt(arrivals_int_change), data = PA_df)
+plot(log(PA_change) ~ log(establish_change), data = PA_df)
+plot(log(PA_change) ~ NFVD_change, data = PA_df)
+
+
+PA_change.lm <- lm(PA_change ~ arrivals_int_change + establish_change + NFVD_change + income_level, data = PA_df)
+
+par(mfrow = c(2,2))
+plot(PA_change.lm)
+
+
+summary(PA_change.lm)
+
+PA_change.lm2 <- lm(PA_change ~ exp_int_change + NFVD_change, data = PA_df)
+
+par(mfrow = c(2,2))
+plot(PA_change.lm2)
+
+summary(PA_change.lm2)
+
+PA_change.lm3 <- lm(PA_change ~ employ_change + NFVD_change, data = PA_df)
+
+par(mfrow = c(2,2))
+plot(PA_change.lm3)
+
+summary(PA_change.lm3)
+
+
+#### marine PAs ####
+
+MPA_cov <- ddply(mydata, "country_code", summarize,
+                MPA_change = Indicator.14.5.1[year == 2014] -
+                  Indicator.14.5.1[year == 2000])
+
+
+MPA_df <- Reduce(function(x, y) merge(x, y, by = "country_code", all=TRUE), 
+                list(MPA_cov, arrivals_int_change, exp_int_change, employ_change, establish_change, NFVD_change))
+
+
+
+# change in protected area coverage between 2004-2014
+library(ggplot2)
+library(viridis)
+library(rworldmap)
+
+# download a world map at a coarse resolution
+world <- getMap(resolution = "coarse")
+# plot(world)
+
+# change names of count columns 
+names(MPA_df)[1] <- "ISO3"
+
+
+# merge the datasets so every country in the world dataset has the count of VD and NVD
+# all.x = T makes sure that we retain all countries, even those that have no pictures
+world@data <- merge (world@data, MPA_df, by = "ISO3", all.x = TRUE) 
+# make NAs 0s
+#world@data$NFVD[which(is.na(world@data$NFVD)==TRUE)] <- 0
+
+
+# convert world map into a format readable by ggplot2
+world_df <- fortify(world)
+# merge the fortified dataset and the result of the previous merge
+#by.x and by.y are different because column names are different
+world_df <- merge(world_df, world@data, by.x = "id", by.y = "ADMIN", all.x = TRUE)  
+
+country_year_maps <- function(data, xcol, ycol, group, value) {
+  map <- ggplot() + 
+    geom_polygon(data = data, aes_string(x = xcol, y = ycol, group = group, fill =
+                                           value), colour = "black", size = 0.25) +
+    coord_fixed() +
+    scale_fill_viridis()+
+    #facet_wrap(~year)+
+    theme(panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.background = element_blank(),
+          plot.background = element_blank(),
+          axis.line = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          plot.title = element_blank())
+  
+  plot(map)   
+}
+
+country_year_maps(data = world_df, xcol = "long", ycol = "lat", group = "group", value = "MPA_change")
+
+
+# analysis
+
+MPA_change.lm <- lm(MPA_change ~ arrivals_int_change + establish_change + NFVD_change, data = MPA_df)
+
+par(mfrow = c(2,2))
+plot(MPA_change.lm)
+
+summary(MPA_change.lm)
+
+MPA_change.lm2 <- lm(MPA_change ~ exp_int_change + NFVD_change, data = MPA_df)
+
+par(mfrow = c(2,2))
+plot(MPA_change.lm2)
+
+summary(MPA_change.lm2)
+
+MPA_change.lm3 <- lm(MPA_change ~ employ_change + NFVD_change, data = MPA_df)
+
+par(mfrow = c(2,2))
+plot(MPA_change.lm3)
+
+summary(MPA_change.lm3)
 
