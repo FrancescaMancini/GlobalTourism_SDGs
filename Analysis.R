@@ -3,7 +3,7 @@
 # of SDG indicators and tourism
 # Author: Francesca Mancini
 # Date created: 2017-12-06
-# Date modified: 2018-02-08 
+# Date modified: 2018-02-12 
 ##################################################
 # load packages
 library(nlme)
@@ -2071,27 +2071,27 @@ mydata_sub <- ddply(mydata_sub, "country_code", transform, NFVD_change = rateCha
 
 # calculate the mean yearly rate of change for each country and tourism time series
 arrivals_int_change <- aggregate(mydata_sub$arrivals_int_change ~ 
-                                   mydata_sub$country_code, FUN = mean)
+                                   mydata_sub$country_code, FUN = median)
 
 names(arrivals_int_change) <- c("country_code", "arrivals_int_change")
 
 exp_int_change <- aggregate(mydata_sub$exp_int_change ~ 
-                              mydata_sub$country_code, FUN = mean)
+                              mydata_sub$country_code, FUN = median)
 
 names(exp_int_change) <- c("country_code", "exp_int_change")
 
 employ_change <- aggregate(mydata_sub$employ_change ~ 
-                             mydata_sub$country_code, FUN = mean)
+                             mydata_sub$country_code, FUN = median)
 
 names(employ_change) <- c("country_code", "employ_change")
 
 establish_change <- aggregate(mydata_sub$establish_change ~ 
-                                mydata_sub$country_code, FUN = mean)
+                                mydata_sub$country_code, FUN = median)
 
 names(establish_change) <- c("country_code", "establish_change")
 
 NFVD_change <- aggregate(mydata_sub$NFVD_change ~
-                           mydata_sub$country_code, FUN = mean)
+                           mydata_sub$country_code, FUN = median)
 
 names(NFVD_change) <- c("country_code", "NFVD_change")
 
@@ -2172,7 +2172,7 @@ plot(log(PA_change) ~ log(establish_change), data = PA_df)
 plot(log(PA_change) ~ NFVD_change, data = PA_df)
 
 
-PA_change.lm <- lm(PA_change ~ arrivals_int_change + establish_change + NFVD_change + income_level, data = PA_df)
+PA_change.lm <- lm(PA_change ~ arrivals_int_change + establish_change + NFVD_change, data = PA_df)
 
 par(mfrow = c(2,2))
 plot(PA_change.lm)
