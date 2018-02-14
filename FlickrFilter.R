@@ -255,4 +255,4 @@ df_filtered <- do.call(rbind, df_list)
 df_filtered_sp <- df_filtered[which(is.na(df_filtered$longitude)!=TRUE),]
 
 # save the dataset containing  observations
-write.table(df_filtered_sp, paste(dataFilePath, "filteredData.txt", sep = ""), row.names = F)
+write.table(df_filtered_sp, paste(dataFilePath, "filteredData_sp.txt", sep = ""), row.names = F)
