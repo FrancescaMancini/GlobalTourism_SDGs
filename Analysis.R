@@ -2166,10 +2166,13 @@ country_year_maps(data = world_df, xcol = "long", ycol = "lat", group = "group",
 income <- read.csv("Income_level.csv", header = T, colClasses = c("factor", "NULL", "factor"), sep = ",")
 PA_df <- merge (PA_df, income, by = "country_code")
 
+hist(PA_df$PA_change)
 
-plot(sqrt(PA_change) ~ sqrt(arrivals_int_change), data = PA_df)
-plot(log(PA_change) ~ log(establish_change), data = PA_df)
-plot(log(PA_change) ~ NFVD_change, data = PA_df)
+plot(PA_change ~ arrivals_int_change, data = PA_df)
+plot(PA_change ~ establish_change, data = PA_df)
+plot(PA_change ~ NFVD_change, data = PA_df)
+plot(PA_change ~ employ_change, data = PA_df)
+plot(PA_change ~ exp_int_change, data = PA_df)
 
 
 PA_change.lm <- lm(PA_change ~ arrivals_int_change + establish_change + NFVD_change, data = PA_df)
@@ -2177,22 +2180,109 @@ PA_change.lm <- lm(PA_change ~ arrivals_int_change + establish_change + NFVD_cha
 par(mfrow = c(2,2))
 plot(PA_change.lm)
 
+boxplot(PA_df$PA_change~PA_df$income_level)
 
 summary(PA_change.lm)
 
-PA_change.lm2 <- lm(PA_change ~ exp_int_change + NFVD_change, data = PA_df)
+PA_df$continent <- countrycode::countrycode(PA_df$country_code, "iso3c", "continent")
+# Warning message:
+#   In countrycode::countrycode(PA_df$country_code, "iso3c", "continent") :
+#   Some values were not matched unambiguously: CHI, XKX
+
+PA_df[which(PA_df$country_code=="CHI"), "continent"] <- "Americas"
+PA_df[which(PA_df$country_code=="XKX"), "continent"] <- "Europe"
+
+PA_df$continent <- as.factor(PA_df$continent)
+
+boxplot(PA_change ~ continent, data = PA_df)
+
+hist(PA_df$arrivals_int_change, breaks = 10)
+hist(PA_df$establish_change, breaks = 10)
+hist(PA_df$exp_int_change, breaks = 10)
+hist(PA_df$employ_change, breaks = 10)
+
+PA_df$arrivals_int_change_cubrt <- (PA_df$arrivals_int_change)^(1/3)
+PA_df$establish_change_cubrt <- (PA_df$establish_change)^(1/3)
+PA_df$exp_int_change_cubrt <- (PA_df$exp_int_change)^(1/3)
+PA_df$employ_change_cubrt <- (PA_df$employ_change)^(1/3)
+
+hist(PA_df$arrivals_int_change_cubrt, breaks = 10)
+hist(PA_df$establish_change_cubrt, breaks = 10)
+hist(PA_df$exp_int_change_cubrt, breaks = 10)
+hist(PA_df$employ_change_cubrt, breaks = 10)
+
+PA_change.lm <- lm(PA_change ~ arrivals_int_change_cubrt + establish_change_cubrt + NFVD_change, data = PA_df)
+
+par(mfrow = c(2,2))
+plot(PA_change.lm)
+
+PA_change.gls.1.1 <- gls(PA_change ~ arrivals_int_change_cubrt + establish_change_cubrt + NFVD_change,
+                     data = PA_df, na.action = na.omit)
+
+
+PA_change.gls.1.2 <- gls(PA_change ~ arrivals_int_change_cubrt + establish_change_cubrt + NFVD_change,
+                     data = PA_df, weights = varIdent(form = ~ 1 | continent), na.action = na.omit)
+
+AIC(PA_change.gls.1.1, PA_change.gls.1.2)
+
+grid.arrange(plot(PA_change.gls.1.2, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(PA_change.gls.1.2, form = resid(., type = "n") ~ NFVD_change, abline = 0),
+             plot(PA_change.gls.1.2, form = resid(., type = "n") ~ arrivals_int_change_cubrt, abline = 0),
+             plot(PA_change.gls.1.2, form = resid(., type = "n") ~ establish_change_cubrt, abline = 0),
+             plot(PA_change.gls.1.2, form = resid(., type = "n") ~ fitted(.)|continent, abline = 0))
+
+qqnorm(resid(PA_change.gls.1.2, type = "p"))
+qqline(resid(PA_change.gls.1.2, type = "p"))
+
+
+summary(PA_change.gls.1.2)
+
+PA_change.lm2 <- lm(PA_change ~ exp_int_change_cubrt + NFVD_change, data = PA_df)
 
 par(mfrow = c(2,2))
 plot(PA_change.lm2)
 
-summary(PA_change.lm2)
+PA_change.gls2.1 <- gls(PA_change ~ exp_int_change_cubrt + NFVD_change, data = PA_df,
+                      na.action = na.omit)
 
-PA_change.lm3 <- lm(PA_change ~ employ_change + NFVD_change, data = PA_df)
+PA_change.gls2.2 <- gls(PA_change ~ exp_int_change_cubrt + NFVD_change, data = PA_df,
+                      weights = varIdent(form = ~ 1 | continent), na.action = na.omit)
+
+AIC(PA_change.gls2.1, PA_change.gls2.2)
+
+grid.arrange(plot(PA_change.gls2.2, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(PA_change.gls2.2, form = resid(., type = "n") ~ NFVD_change, abline = 0),
+             plot(PA_change.gls2.2, form = resid(., type = "n") ~ exp_int_change_cubrt, abline = 0),
+             plot(PA_change.gls2.2, form = resid(., type = "n") ~ fitted(.)|continent, abline = 0))
+
+qqnorm(resid(PA_change.gls2.2, type = "p"))
+qqline(resid(PA_change.gls2.2, type = "p"))
+
+summary(PA_change.gls2.2)
+
+PA_change.lm3 <- lm(PA_change ~ employ_change_cubrt + NFVD_change, data = PA_df)
 
 par(mfrow = c(2,2))
 plot(PA_change.lm3)
 
-summary(PA_change.lm3)
+PA_change.gls3.1 <- gls(PA_change ~ employ_change_cubrt + NFVD_change, data = PA_df,
+                        na.action = na.omit)
+
+PA_change.gls3.2 <- gls(PA_change ~ employ_change_cubrt + NFVD_change, data = PA_df,
+                        weights = varIdent(form = ~ 1 | continent), na.action = na.omit)
+
+AIC(PA_change.gls3.1, PA_change.gls3.2)
+
+grid.arrange(plot(PA_change.gls3.2, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(PA_change.gls3.2, form = resid(., type = "n") ~ NFVD_change, abline = 0),
+             plot(PA_change.gls3.2, form = resid(., type = "n") ~ employ_change_cubrt, abline = 0),
+             plot(PA_change.gls3.2, form = resid(., type = "n") ~ fitted(.)|continent, abline = 0))
+
+qqnorm(resid(PA_change.gls3.2, type = "p"))
+qqline(resid(PA_change.gls3.2, type = "p"))
+
+
+summary(PA_change.gls3.2)
 
 
 #### marine PAs ####
@@ -2260,24 +2350,105 @@ country_year_maps(data = world_df, xcol = "long", ycol = "lat", group = "group",
 
 # analysis
 
-MPA_change.lm <- lm(MPA_change ~ arrivals_int_change + establish_change + NFVD_change, data = MPA_df)
+MPA_df$arrivals_int_change_cubrt <- (MPA_df$arrivals_int_change)^(1/3)
+MPA_df$establish_change_cubrt <- (MPA_df$establish_change)^(1/3)
+MPA_df$exp_int_change_cubrt <- (MPA_df$exp_int_change)^(1/3)
+MPA_df$employ_change_cubrt <- (MPA_df$employ_change)^(1/3)
+
+MPA_df$continent <- countrycode::countrycode(MPA_df$country_code, "iso3c", "continent")
+# Warning message:
+#   In countrycode::countrycode(MPA_df$country_code, "iso3c", "continent") :
+#   Some values were not matched unambiguously: ATA, ATF, CHI, HMD, IOT, SGS, XKX
+
+
+MPA_df[which(MPA_df$country_code=="ATA"), "continent"] <- "Antarctica"
+MPA_df[which(MPA_df$country_code=="ATF"), "continent"] <- "Africa"
+MPA_df[which(MPA_df$country_code=="CHI"), "continent"] <- "Americas"
+MPA_df[which(MPA_df$country_code=="HMD"), "continent"] <- "Antarctica"
+MPA_df[which(MPA_df$country_code=="IOT"), "continent"] <- "Asia"
+MPA_df[which(MPA_df$country_code=="SGS"), "continent"] <- "Antarctica"
+MPA_df[which(MPA_df$country_code=="XKX"), "continent"] <- "Europe"
+
+MPA_df$continent <- as.factor(MPA_df$continent)
+
+boxplot(MPA_change ~ continent, data = MPA_df)
+
+
+MPA_change.lm <- lm(MPA_change ~ arrivals_int_change_cubrt + establish_change_cubrt + NFVD_change, data = MPA_df)
 
 par(mfrow = c(2,2))
 plot(MPA_change.lm)
 
-summary(MPA_change.lm)
+MPA_change.gls.1.1 <- gls(MPA_change ~ arrivals_int_change_cubrt + establish_change_cubrt + NFVD_change,
+                         data = MPA_df, na.action = na.omit)
 
-MPA_change.lm2 <- lm(MPA_change ~ exp_int_change + NFVD_change, data = MPA_df)
+
+MPA_change.gls.1.2 <- gls(MPA_change ~ arrivals_int_change_cubrt + establish_change_cubrt + NFVD_change,
+                         data = MPA_df, weights = varIdent(form = ~ 1 | continent), na.action = na.omit)
+
+AIC(MPA_change.gls.1.1, MPA_change.gls.1.2)
+
+grid.arrange(plot(MPA_change.gls.1.2, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(MPA_change.gls.1.2, form = resid(., type = "n") ~ NFVD_change, abline = 0),
+             plot(MPA_change.gls.1.2, form = resid(., type = "n") ~ arrivals_int_change_cubrt, abline = 0),
+             plot(MPA_change.gls.1.2, form = resid(., type = "n") ~ establish_change_cubrt, abline = 0),
+             plot(MPA_change.gls.1.2, form = resid(., type = "n") ~ fitted(.)|continent, abline = 0))
+
+qqnorm(resid(MPA_change.gls.1.2, type = "p"))
+qqline(resid(MPA_change.gls.1.2, type = "p"))
+
+
+summary(MPA_change.gls.1.2)
+
+
+MPA_change.lm2 <- lm(MPA_change ~ exp_int_change_cubrt + NFVD_change, data = MPA_df)
 
 par(mfrow = c(2,2))
 plot(MPA_change.lm2)
 
-summary(MPA_change.lm2)
+MPA_change.gls.2.1 <- gls(MPA_change ~ exp_int_change_cubrt + NFVD_change,
+                          data = MPA_df, na.action = na.omit)
 
-MPA_change.lm3 <- lm(MPA_change ~ employ_change + NFVD_change, data = MPA_df)
+
+MPA_change.gls.2.2 <- gls(MPA_change ~ exp_int_change_cubrt + NFVD_change,
+                          data = MPA_df, weights = varIdent(form = ~ 1 | continent), na.action = na.omit)
+
+AIC(MPA_change.gls.2.1, MPA_change.gls.2.2)
+
+grid.arrange(plot(MPA_change.gls.2.2, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(MPA_change.gls.2.2, form = resid(., type = "n") ~ NFVD_change, abline = 0),
+             plot(MPA_change.gls.2.2, form = resid(., type = "n") ~ exp_int_change_cubrt, abline = 0),
+             plot(MPA_change.gls.2.2, form = resid(., type = "n") ~ fitted(.)|continent, abline = 0))
+
+qqnorm(resid(MPA_change.gls.2.2, type = "p"))
+qqline(resid(MPA_change.gls.2.2, type = "p"))
+
+
+summary(MPA_change.gls.2.2)
+
+
+MPA_change.lm3 <- lm(MPA_change ~ employ_change_cubrt + NFVD_change, data = MPA_df)
 
 par(mfrow = c(2,2))
 plot(MPA_change.lm3)
 
-summary(MPA_change.lm3)
+MPA_change.gls.3.1 <- gls(MPA_change ~ employ_change_cubrt + NFVD_change,
+                          data = MPA_df, na.action = na.omit)
+
+
+MPA_change.gls.3.2 <- gls(MPA_change ~ employ_change_cubrt + NFVD_change,
+                          data = MPA_df, weights = varIdent(form = ~ 1 | continent), na.action = na.omit)
+
+AIC(MPA_change.gls.3.1, MPA_change.gls.3.2)
+
+grid.arrange(plot(MPA_change.gls.3.2, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(MPA_change.gls.3.2, form = resid(., type = "n") ~ NFVD_change, abline = 0),
+             plot(MPA_change.gls.3.2, form = resid(., type = "n") ~ employ_change_cubrt, abline = 0),
+             plot(MPA_change.gls.3.2, form = resid(., type = "n") ~ fitted(.)|continent, abline = 0))
+
+qqnorm(resid(MPA_change.gls.3.2, type = "p"))
+qqline(resid(MPA_change.gls.3.2, type = "p"))
+
+
+summary(MPA_change.gls.3.2)
 
