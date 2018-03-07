@@ -253,6 +253,6 @@ photos_PA$ISO3[which(photos_PA$country == "Saint Martin")] <- "MAF"
 # now merge datasets
 photos_PA_gov <- merge (photos_PA, governance, by = c("ISO3", "year"))
 
-
+write.table(photos_PA_gov, "Photos_PA_Governance.txt", row.names = F, sep = "\t")
 
 
