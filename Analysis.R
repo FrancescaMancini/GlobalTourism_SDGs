@@ -3,7 +3,7 @@
 # of SDG indicators and tourism
 # Author: Francesca Mancini
 # Date created: 2017-12-06
-# Date modified: 2018-02-12 
+# Date modified: 2018-03-07 
 ##################################################
 # load packages
 library(nlme)
@@ -2451,4 +2451,267 @@ qqline(resid(MPA_change.gls.3.2, type = "p"))
 
 
 summary(MPA_change.gls.3.2)
+
+#####################################################################
+#############flickr photos in PA and governance######################
+#####################################################################
+
+photos_PA_gov <- read.table("Photos_PA_Governance.txt", header = T, stringsAsFactors = F)
+
+# graphical exploration
+
+par(mfrow = c(3,3))
+hist(photos_PA_gov$prop_photos_in, breaks = 100) 
+hist(photos_PA_gov$photos_all, breaks = 100) 
+hist(photos_PA_gov$photos_in, breaks = 100) 
+hist(photos_PA_gov$ControlofCorruption, breaks = 100) 
+hist(photos_PA_gov$GovenrmentEffectiveness, breaks = 100)
+hist(photos_PA_gov$PoliticalStabilityNoViolence, breaks = 100) 
+hist(photos_PA_gov$RegulatoryQuality, breaks = 100) 
+hist(photos_PA_gov$RuleofLaw, breaks = 100) 
+hist(photos_PA_gov$Voice.Accountability, breaks = 100) 
+dev.off()
+
+
+photos_PA_gov$photos_in_log <- log1p(photos_PA_gov$photos_in) 
+photos_PA_gov$photos_all_log <- log1p(photos_PA_gov$photos_all)  
+photos_PA_gov$photos_out_log <- log1p(photos_PA_gov$photos_out)  
+
+par(mfrow = c(1,2))
+hist(photos_PA_gov$photos_out_log, breaks = 50) 
+hist(photos_PA_gov$photos_in_log, breaks = 50) 
+dev.off()
+
+# look at correlation between indicators variables
+
+# tourism
+pairs(photos_PA_gov[,-c(1:7)], upper.panel = panel.smooth, lower.panel = panel.cor,
+      diag.panel = panel.hist, main = "Governance") 
+
+# relationships between response and explanatory variables
+
+ggplot(photos_PA_gov, aes(x = year, y = photos_in_log)) +
+  geom_line(aes(colour = ISO3)) +
+  geom_smooth(col = "black")
+
+ggplot(photos_PA_gov, aes(x = photos_in_log, y = ControlofCorruption)) +
+  geom_point(aes(colour = ISO3)) +
+  geom_smooth(aes(colour = ISO3)) 
+
+ggplot(photos_PA_gov, aes(x = photos_in_log, y = GovenrmentEffectiveness)) +
+  geom_point(aes(colour = ISO3)) +
+  geom_smooth(aes(colour = ISO3)) 
+
+ggplot(photos_PA_gov, aes(x = photos_in_log, y = PoliticalStabilityNoViolence)) +
+  geom_point(aes(colour = ISO3)) +
+  geom_smooth(aes(colour = ISO3)) 
+
+ggplot(photos_PA_gov, aes(x = photos_in_log, y = RegulatoryQuality)) +
+  geom_point(aes(colour = ISO3)) +
+  geom_smooth(aes(colour = ISO3)) 
+
+ggplot(photos_PA_gov, aes(x = photos_in_log, y = RuleofLaw)) +
+  geom_point(aes(colour = ISO3)) +
+  geom_smooth(aes(colour = ISO3)) 
+
+ggplot(photos_PA_gov, aes(x = photos_in_log, y = Voice.Accountability)) +
+  geom_point(aes(colour = ISO3)) +
+  geom_smooth(aes(colour = ISO3)) 
+
+# collinearity
+source("Collinearity.R")
+
+# calculate VIF
+VIF_tourism <- corvif(photos_PA_gov[,-c(1:7)])
+# all governance indicators are collinear
+
+# same ISO code for Cyprus and Northern Cyprus
+# since Northern Cyprus is not an internationally recognised country
+# we delete all observations for Northern Cyprus
+
+photos_PA_gov <- photos_PA_gov[-which(photos_PA_gov$country == "Northern Cyprus"), ]
+
+photos_PA_gov$ISO3 <- as.factor(photos_PA_gov$ISO3)
+
+#########################################
+############ Mixed models ###############
+#########################################
+
+corruption.AR <- lme((photos_in_log - photos_out_log) ~ ControlofCorruption,
+                       random=~1|ISO3, data = photos_PA_gov,
+                       correlation=corAR1(form=~year|ISO3),na.action = na.omit)
+
+
+grid.arrange(plot(corruption.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(corruption.AR, form = resid(., type = "n") ~ ControlofCorruption, abline = 0),
+             qqnorm(corruption.AR, ~ ranef(.)),
+             plot(ACF(corruption.AR, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(corruption.AR, type = "p"))
+qqline(resid(corruption.AR, type = "p"))
+
+corruption.ARMA.1.1 <- lme((photos_in_log - photos_out_log) ~ ControlofCorruption,
+                     random=~1|ISO3, data = photos_PA_gov,
+                     correlation=corARMA(form=~year|ISO3, p = 1, q = 1),na.action = na.omit)
+
+grid.arrange(plot(corruption.ARMA.1.1, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(corruption.ARMA.1.1, form = resid(., type = "n") ~ ControlofCorruption, abline = 0),
+             qqnorm(corruption.ARMA.1.1, ~ ranef(.)),
+             plot(ACF(corruption.ARMA.1.1, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(corruption.ARMA.1.1, type = "p"))
+qqline(resid(corruption.ARMA.1.1, type = "p"))
+
+summary(corruption.ARMA.1.1)
+
+#####
+
+
+government.AR <- lme((photos_in_log - photos_out_log) ~ GovenrmentEffectiveness,
+                     random=~1|ISO3, data = photos_PA_gov,
+                     correlation=corAR1(form=~year|ISO3),na.action = na.omit)
+
+
+grid.arrange(plot(government.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(government.AR, form = resid(., type = "n") ~ GovenrmentEffectiveness, abline = 0),
+             qqnorm(government.AR, ~ ranef(.)),
+             plot(ACF(government.AR, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(government.AR, type = "p"))
+qqline(resid(government.AR, type = "p"))
+
+government.ARMA.1.1 <- lme((photos_in_log - photos_out_log) ~ GovenrmentEffectiveness,
+                     random=~1|ISO3, data = photos_PA_gov,
+                     correlation=corARMA(form=~year|ISO3, p = 1, q = 1),na.action = na.omit)
+
+
+grid.arrange(plot(government.ARMA.1.1, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(government.ARMA.1.1, form = resid(., type = "n") ~ GovenrmentEffectiveness, abline = 0),
+             qqnorm(government.ARMA.1.1, ~ ranef(.)),
+             plot(ACF(government.ARMA.1.1, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(government.ARMA.1.1, type = "p"))
+qqline(resid(government.ARMA.1.1, type = "p"))
+
+summary(government.ARMA.1.1)
+
+######
+
+stability.AR <- lme((photos_in_log - photos_out_log) ~ PoliticalStabilityNoViolence,
+                    random=~1|ISO3, data = photos_PA_gov,
+                    correlation=corAR1(form=~year|ISO3),na.action = na.omit)
+
+
+grid.arrange(plot(stability.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(stability.AR, form = resid(., type = "n") ~ PoliticalStabilityNoViolence, abline = 0),
+             qqnorm(stability.AR, ~ ranef(.)),
+             plot(ACF(stability.AR, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(stability.AR, type = "p"))
+qqline(resid(stability.AR, type = "p"))
+
+stability.ARMA.1.1 <- lme((photos_in_log - photos_out_log) ~ PoliticalStabilityNoViolence,
+                    random=~1|ISO3, data = photos_PA_gov,
+                    correlation=corARMA(form=~year|ISO3, p = 1, q = 1),na.action = na.omit)
+
+
+grid.arrange(plot(stability.ARMA.1.1, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(stability.ARMA.1.1, form = resid(., type = "n") ~ PoliticalStabilityNoViolence, abline = 0),
+             qqnorm(stability.ARMA.1.1, ~ ranef(.)),
+             plot(ACF(stability.ARMA.1.1, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(stability.ARMA.1.1, type = "p"))
+qqline(resid(stability.ARMA.1.1, type = "p"))
+
+summary(stability.ARMA.1.1)
+
+#####
+
+regulatoryquality.AR <- lme((photos_in_log - photos_out_log) ~ RegulatoryQuality,
+                    random=~1|ISO3, data = photos_PA_gov,
+                    correlation=corAR1(form=~year|ISO3),na.action = na.omit)
+
+
+grid.arrange(plot(regulatoryquality.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(regulatoryquality.AR, form = resid(., type = "n") ~ RegulatoryQuality, abline = 0),
+             qqnorm(regulatoryquality.AR, ~ ranef(.)),
+             plot(ACF(regulatoryquality.AR, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(regulatoryquality.AR, type = "p"))
+qqline(resid(regulatoryquality.AR, type = "p"))
+
+regulatoryquality.ARMA.1.1 <- lme((photos_in_log - photos_out_log) ~ RegulatoryQuality,
+                          random=~1|ISO3, data = photos_PA_gov,
+                          correlation=corARMA(form=~year|ISO3, p = 1, q = 1),na.action = na.omit)
+
+
+grid.arrange(plot(regulatoryquality.ARMA.1.1, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(regulatoryquality.ARMA.1.1, form = resid(., type = "n") ~ RegulatoryQuality, abline = 0),
+             qqnorm(regulatoryquality.ARMA.1.1, ~ ranef(.)),
+             plot(ACF(regulatoryquality.ARMA.1.1, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(regulatoryquality.ARMA.1.1, type = "p"))
+qqline(resid(regulatoryquality.ARMA.1.1, type = "p"))
+
+summary(regulatoryquality.ARMA.1.1)
+
+######
+
+RuleofLaw.AR <- lme((photos_in_log - photos_out_log) ~ RuleofLaw,
+                            random=~1|ISO3, data = photos_PA_gov,
+                            correlation=corAR1(form=~year|ISO3),na.action = na.omit)
+
+
+grid.arrange(plot(RuleofLaw.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(RuleofLaw.AR, form = resid(., type = "n") ~ RuleofLaw, abline = 0),
+             qqnorm(RuleofLaw.AR, ~ ranef(.)),
+             plot(ACF(RuleofLaw.AR, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(RuleofLaw.AR, type = "p"))
+qqline(resid(RuleofLaw.AR, type = "p"))
+
+RuleofLaw.ARMA.1.1 <- lme((photos_in_log - photos_out_log) ~ RuleofLaw,
+                          random=~1|ISO3, data = photos_PA_gov,
+                          correlation=corARMA(form=~year|ISO3, p = 1, q = 1),na.action = na.omit)
+
+
+grid.arrange(plot(RuleofLaw.ARMA.1.1, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(RuleofLaw.ARMA.1.1, form = resid(., type = "n") ~ RuleofLaw, abline = 0),
+             qqnorm(RuleofLaw.ARMA.1.1, ~ ranef(.)),
+             plot(ACF(RuleofLaw.ARMA.1.1, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(RuleofLaw.ARMA.1.1, type = "p"))
+qqline(resid(RuleofLaw.ARMA.1.1, type = "p"))
+
+summary(RuleofLaw.ARMA.1.1)
+
+######
+
+accountability.AR <- lme((photos_in_log - photos_out_log) ~ Voice.Accountability,
+                    random=~1|ISO3, data = photos_PA_gov,
+                    correlation=corAR1(form=~year|ISO3),na.action = na.omit)
+
+
+grid.arrange(plot(accountability.AR, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(accountability.AR, form = resid(., type = "n") ~ Voice.Accountability, abline = 0),
+             qqnorm(accountability.AR, ~ ranef(.)),
+             plot(ACF(accountability.AR, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(accountability.AR, type = "p"))
+qqline(resid(accountability.AR, type = "p"))
+
+accountability.ARMA.1.1 <- lme((photos_in_log - photos_out_log) ~ Voice.Accountability,
+                          random=~1|ISO3, data = photos_PA_gov,
+                          correlation=corARMA(form=~year|ISO3, p = 1, q = 1),na.action = na.omit)
+
+
+grid.arrange(plot(accountability.ARMA.1.1, form = resid(., type = "n") ~ fitted(.), abline = 0),
+             plot(accountability.ARMA.1.1, form = resid(., type = "n") ~ Voice.Accountability, abline = 0),
+             qqnorm(accountability.ARMA.1.1, ~ ranef(.)),
+             plot(ACF(accountability.ARMA.1.1, resType = "normalized"), alpha = .05))
+
+qqnorm(resid(accountability.ARMA.1.1, type = "p"))
+qqline(resid(accountability.ARMA.1.1, type = "p"))
+
+summary(accountability.ARMA.1.1)
 
