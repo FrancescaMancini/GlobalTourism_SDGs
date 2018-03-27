@@ -3,7 +3,7 @@
 # pictures by country and year
 # Author: Francesca Mancini
 # Date created: 2017-10-23
-# Date modified: 2017-11-03
+# Date modified: 2018-03-27
 #################################################
 
 #####################################################
@@ -106,8 +106,8 @@ count_VD_year <- data.frame(table(dat_VD_terr$Country, dat_VD_terr$year))
 # assign column names
 names(count_VD_year) <- c("country", "year", "FVD")
 # save
-write.table(count_VD_year, "./Flickr/FVD_year.txt",
-            row.names = F, sep = "\t")
+# write.table(count_VD_year, "./Flickr/FVD_year.txt",
+#             row.names = F, sep = "\t")
 
 
 ################################################
@@ -173,8 +173,8 @@ count_NVD <- data.frame(table(nat_VD_terr$Country))
 # give country column the same name as in the world dataset
 names(count_NVD)[1]<- "ADMIN"
 # save
-write.table(count_NVD, "./Flickr/NFVD_agg.txt",
-            row.names = F, sep = "\t")
+# write.table(count_NVD, "./Flickr/NFVD_agg.txt",
+#             row.names = F, sep = "\t")
 
 
 # count nature visitor days per country per year
@@ -182,8 +182,8 @@ count_NVD_year <- data.frame(table(nat_VD_terr$Country, nat_VD_terr$year))
 
 names(count_NVD_year) <- c("country", "year", "FUD")
 
-write.table(count_NVD_year, "./Flickr/NFVD_year.txt",
-            row.names = F, sep = "\t")
+# write.table(count_NVD_year, "./Flickr/NFVD_year.txt",
+#             row.names = F, sep = "\t")
 
 ##############################################################
 ############### end of R code run in Maxwell #################
@@ -198,8 +198,6 @@ write.table(count_NVD_year, "./Flickr/NFVD_year.txt",
 library(plyr)
 library(ggplot2)
 library(viridis)
-#library(RColorBrewer)
-#library(sp)
 library(rworldmap)
 
 # download a world map at a coarse resolution
@@ -228,7 +226,7 @@ if(world@data$FVD[i] != 0) {
 # convert world map into a format readable by ggplot2
 world_df <- fortify(world)
 # merge the fortified dataset and the result of the previous merge
-#by.x and by.y are different because column names are different
+# by.x and by.y are different because column names are different
 world_df <- merge(world_df, world@data, by.x = "id", by.y = "ADMIN", all.x = TRUE)  
 
 # plot how many FVD per country
@@ -238,7 +236,6 @@ flickr_global_FVD <- ggplot() +
                                       log10(FVD)), colour = "black", size = 0.25) +
   coord_fixed() +
   scale_fill_viridis(option = "A")+
-  #scale_fill_gradientn(colours=brewer.pal(n=8, name="PuBuGn")) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
         panel.background = element_blank(),
@@ -262,7 +259,6 @@ flickr_global_NFVD <- ggplot() +
                                       log10(NFVD)), colour = "black", size = 0.25) +
   coord_fixed() +
   scale_fill_viridis(option = "B")+
-  #scale_fill_gradientn(colours=brewer.pal(n=8, name="PuBuGn")) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
         panel.background = element_blank(),
@@ -285,7 +281,6 @@ flickr_global_NFVD_prop <- ggplot() +
                                       NFVD_prop), colour = "black", size = 0.25) +
   coord_fixed() +
   scale_fill_viridis()+
-  #scale_fill_gradientn(colours=brewer.pal(n=8, name="PuBuGn")) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
         panel.background = element_blank(),
@@ -296,9 +291,12 @@ flickr_global_NFVD_prop <- ggplot() +
         axis.ticks = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        plot.title = element_blank())
+        plot.title = element_blank(), 
+        text=element_text(size=12)) +
+  labs(fill = "Proportion of Flickr\nnature photographs\n")
 
-tiff(filename="FlickrGlobalNVDprop.tiff",width=3000,height=3000,res=300)
+
+pdf(file="FlickrNatureProp.pdf",width=7.3,height=5)
 flickr_global_NFVD_prop
 dev.off()
 
@@ -331,7 +329,7 @@ for(i in 1:length(world@data$FVD)){
 # convert world map into a format readable by ggplot2
 world_df <- fortify(world)
 # merge the fortified dataset and the result of the previous merge
-#by.x and by.y are different because column names are different
+# by.x and by.y are different because column names are different
 world_df <- merge(world_df, world@data, by.x = "id", by.y = "ADMIN", all.x = TRUE)  
 
 # plot how many FVD per country
