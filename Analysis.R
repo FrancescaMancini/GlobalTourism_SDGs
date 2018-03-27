@@ -3,7 +3,7 @@
 ##### of SDG indicators and tourism
 ##### Author: Francesca Mancini
 ##### Date created: 2017-12-06
-##### Date modified: 2018-03-26 
+##### Date modified: 2018-03-27 
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
 
 # load packages
@@ -1334,8 +1334,6 @@ plot(world)
 # merge the datasets so every country in the world dataset has the prop of photos in PA
 # all.x = T makes sure that we retain all countries, even those that have no pictures
 world@data <- merge (world@data, photos_PA, by.x = "ADMIN", by.y = "country", all.x = TRUE) 
-# make NAs 0s
-world@data$NFVD[which(is.na(world@data$NFVD)==TRUE)] <- 0
 
 # convert world map into a format readable by ggplot2
 world_df <- fortify(world)
@@ -1405,7 +1403,7 @@ PA_photos_total <- ggplot() +
         axis.title.y = element_blank(),
         plot.title = element_blank(), 
         text=element_text(size=12)) +
-  labs(fill = "Proportion\nof Flickr photos\nin Protected Areas\n")
+  labs(fill = "Proportion of\nFlickr photographs\nin Protected Areas\n")
 
 pdf(file="FlickrPAprop.pdf",width=7.3,height=5)
 PA_photos_total
