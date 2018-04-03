@@ -3,13 +3,13 @@
 ##### of SDG indicators and tourism
 ##### Author: Francesca Mancini
 ##### Date created: 2017-12-06
-##### Date modified: 2018-03-27 
+##### Date modified: 2018-04-03 
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
 
 # load packages
 library(nlme)
 library(gridExtra)
-
+library(ggplot2)
 
 # load the data and reorder the dataset columns
 # so that indicators for the same target are close together
@@ -35,8 +35,8 @@ grouped <- c("ARB", "CSS", "CEB", "EAR", "EAS", "EAP", "TEA", "EMU", "ECS",
 # delete grouped countries from combined dataset             
 mydata <- mydata[-which(mydata$country_code %in% grouped),]
 
-# delete observations before 2004 and after 2014 (period for which we have flickr data)
-mydata <- mydata[-which(mydata$year<2004 | mydata$year>2014),]
+# delete observations before 1995 and after 2016 (period for which we have all data)
+mydata <- mydata[-which(mydata$year<1995 | mydata$year>2016),]
 
 # make country_code a factor again
 mydata$country_code <- as.factor(mydata$country_code)
@@ -67,7 +67,7 @@ dev.off()
 mydata.log <- mydata
 #mydata.log$trips_dom <- log(mydata$trips_dom)
 mydata.log$arrivals_int <- as.vector(scale(log(mydata$arrivals_int)))
-mydata.log$exp_int <- as.vector(scale(log(mydata$exp_int)))
+mydata.log$exp_int <- as.vector(scale(log(mydata$exp_int + 1)))
 mydata.log$NFVD_prop <- as.vector(scale(mydata$NFVD_prop))
 
 
@@ -80,7 +80,7 @@ hist(mydata$establishments, breaks = 100)
 dev.off()
 
 mydata.log$employ <- as.vector(scale(log(mydata$employ)))
-mydata.log$establishments <- as.vector(scale(log(mydata$establishments)))
+mydata.log$establishments <- as.vector(scale(log(mydata$establishments + 1)))
 
 
 # Goal 8
@@ -273,12 +273,18 @@ ggplot(mydata.log, aes(x = NFVD_prop, y = exp_int)) +
   geom_smooth(aes(colour = country_code)) +
   facet_wrap(~income_level)
 
+ggplot(mydata, aes(x = Indicator.8.2.11, y = Indicator.12.2.1)) +
+  geom_point(aes(colour = income_level)) +
+  geom_smooth(aes(colour = income_level))
 
 
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
 ########### Tourism indicators #################
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
 tourism_indicators <- subset(mydata.log, select = c(country_code, year, employ, arrivals_int, exp_int, establishments, NFVD_prop))
+# delete observations before 2004 and after 2014 (period for which we have flickr data)
+tourism_indicators <- tourism_indicators[-which(tourism_indicators$year<2004 | tourism_indicators$year>2014),]
+
 tourism_indicators <- tourism_indicators[c(3:7,1,2)]
 
 
