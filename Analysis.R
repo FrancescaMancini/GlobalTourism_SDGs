@@ -281,11 +281,14 @@ ggplot(mydata, aes(x = Indicator.8.2.11, y = Indicator.12.2.1)) +
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
 ########### Tourism indicators #################
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
-tourism_indicators <- subset(mydata.log, select = c(country_code, year, employ, arrivals_int, exp_int, establishments, NFVD_prop))
+tourism_indicators <- subset(mydata.log, select = c(country_code, year, employ, arrivals_int, exp_int, establishments, NFVD_prop, income_level))
 # delete observations before 2004 and after 2014 (period for which we have flickr data)
 tourism_indicators <- tourism_indicators[-which(tourism_indicators$year<2004 | tourism_indicators$year>2014),]
 
-tourism_indicators <- tourism_indicators[c(3:7,1,2)]
+tourism_indicators <- tourism_indicators[c(3:7,1,2,8)]
+
+tourism_indicators.H <- tourism_indicators[which(tourism_indicators$income_level == "H" | tourism_indicators$income_level == "UM"),]
+tourism_indicators.L <- tourism_indicators[which(tourism_indicators$income_level == "L" | tourism_indicators$income_level == "LM"),]
 
 
 for(t_ind in 1:4){
@@ -319,6 +322,79 @@ tourism_results <- tourism_results[c(7,6,1:5)]
 tourism_results <- subset(tourism_results, indicator2 !="(Intercept)")
 
 
+# High income ####
+
+for(t_ind in 1:4){
+  fmla <- as.formula(paste0(as.character(names(tourism_indicators.H)[t_ind]), "~", "NFVD_prop"))
+  
+  assign(paste("t_lme", names(tourism_indicators.H)[t_ind], sep = "_"), 
+         tryCatch(lme(fmla, data=tourism_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+}
+
+# need to obtain a table with all the results
+# use lapply to obtain a table of coefficients 
+# for each model and put them in a list
+tourism_results.H <- lapply(ls(pattern="t_lme_"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(tourism_results.H) <- ls(pattern="t_lme_")
+
+# add a column for the explanatory variable name
+tourism_results.H <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), tourism_results.H, SIMPLIFY = F)
+
+# add a column for the response variable name
+tourism_results.H <- Map(cbind, tourism_results.H, indicator1 = sapply(strsplit(names(tourism_results.H), "t_lme_"), "[[", 2))
+
+# transform to a dataframe
+tourism_results.H <- do.call(rbind, tourism_results.H)
+row.names(tourism_results.H) <- NULL 
+tourism_results.H <- tourism_results.H[c(7,6,1:5)]
+
+# delete Intercepts
+tourism_results.H <- subset(tourism_results.H, indicator2 !="(Intercept)")
+
+
+rm(list = ls(pattern = "t_lme_"))
+
+
+
+# Low income
+
+for(t_ind in 1:4){
+  fmla <- as.formula(paste0(as.character(names(tourism_indicators.L)[t_ind]), "~", "NFVD_prop"))
+  
+  assign(paste("t_lme", names(tourism_indicators.L)[t_ind], sep = "_"), 
+         tryCatch(lme(fmla, data=tourism_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+}
+
+# need to obtain a table with all the results
+# use lapply to obtain a table of coefficients 
+# for each model and put them in a list
+tourism_results.L <- lapply(ls(pattern="t_lme_"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(tourism_results.L) <- ls(pattern="t_lme_")
+
+# add a column for the explanatory variable name
+tourism_results.L <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), tourism_results.L, SIMPLIFY = F)
+
+# add a column for the response variable name
+tourism_results.L <- Map(cbind, tourism_results.L, indicator1 = sapply(strsplit(names(tourism_results.L), "t_lme_"), "[[", 2))
+
+# transform to a dataframe
+tourism_results.L <- do.call(rbind, tourism_results.L)
+row.names(tourism_results.L) <- NULL 
+tourism_results.L <- tourism_results.L[c(7,6,1:5)]
+
+# delete Intercepts
+tourism_results.L <- subset(tourism_results.L, indicator2 !="(Intercept)")
+
+
+rm(list = ls(pattern = "t_lme_"))
 
 
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
@@ -329,8 +405,12 @@ SDG8_indicators <- subset(mydata.log, select = c(Indicator.8.1.1 , Indicator.8.1
                                                  Indicator.8.2.4, Indicator.8.2.7, Indicator.8.2.11,
                                                  Indicator.8.5.5, Indicator.8.5.11, Indicator.8.5.15,
                                                  Indicator.8.10.10, arrivals_int, employ, establishments,
-                                                 exp_int, country_code, year))
+                                                 exp_int, country_code, year, income_level))
 
+
+
+SDG8_indicators.H <- SDG8_indicators[which(SDG8_indicators$income_level == "H" | SDG8_indicators$income_level == "UM"),]
+SDG8_indicators.L <- SDG8_indicators[which(SDG8_indicators$income_level == "L" | SDG8_indicators$income_level == "LM"),]
 
 for(sdg8_ind in 1:10){
   fmla_arrivals <- as.formula(paste0(as.character(names(SDG8_indicators)[sdg8_ind]), "~", "arrivals_int"))
@@ -382,12 +462,122 @@ SDG8_results <- SDG8_results[c(7,6,1:5)]
 SDG8_results <- subset(SDG8_results, indicator2 !="(Intercept)")
 
 
+# High income #####
+
+for(sdg8_ind in 1:10){
+  fmla_arrivals <- as.formula(paste0(as.character(names(SDG8_indicators.H)[sdg8_ind]), "~", "arrivals_int"))
+  
+  fmla_employment <- as.formula(paste0(as.character(names(SDG8_indicators.H)[sdg8_ind]), "~", "employ"))
+  
+  fmla_establishments <- as.formula(paste0(as.character(names(SDG8_indicators.H)[sdg8_ind]), "~", "establishments"))
+  
+  fmla_exp <- as.formula(paste0(as.character(names(SDG8_indicators.H)[sdg8_ind]), "~", "exp_int"))
+  
+  assign(paste("lme_", names(SDG8_indicators.H)[sdg8_ind], ".H.1", sep = ""), 
+         tryCatch(lme(fmla_arrivals, data=SDG8_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+  assign(paste("lme_", names(SDG8_indicators.H)[sdg8_ind], ".H.2", sep = ""), 
+         tryCatch(lme(fmla_employment, data=SDG8_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+  assign(paste("lme_", names(SDG8_indicators.H)[sdg8_ind], ".H.3", sep = ""), 
+         tryCatch(lme(fmla_establishments, data=SDG8_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+  assign(paste("lme_", names(SDG8_indicators.H)[sdg8_ind], ".H.4", sep = ""), 
+         tryCatch(lme(fmla_exp, data=SDG8_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+}
+
+SDG8_results.H <- lapply(ls(pattern="lme_Indicator.8"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(SDG8_results.H) <- ls(pattern="lme_Indicator.8")
+
+# add a column for the explanatory variable name
+SDG8_results.H <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), SDG8_results.H, SIMPLIFY = F)
+
+# add a column for the response variable name
+SDG8_results.H <- Map(cbind, SDG8_results.H, indicator1 = gsub("lme_(.*)\\..*", "\\1", names(SDG8_results.H), perl = T))
+
+# transform to a dataframe
+SDG8_results.H <- do.call(rbind, SDG8_results.H)
+row.names(SDG8_results.H) <- NULL
+SDG8_results.H <- SDG8_results.H[c(7,6,1:5)]
+
+# delete Intercepts
+SDG8_results.H <- subset(SDG8_results.H, indicator2 !="(Intercept)")
+
+
+rm(list = ls(pattern = "lme_Indicator.8"))
+
+
+
+# Low income ####
+
+for(sdg8_ind in 1:10){
+  fmla_arrivals <- as.formula(paste0(as.character(names(SDG8_indicators)[sdg8_ind]), "~", "arrivals_int"))
+  
+  fmla_employment <- as.formula(paste0(as.character(names(SDG8_indicators)[sdg8_ind]), "~", "employ"))
+  
+  fmla_establishments <- as.formula(paste0(as.character(names(SDG8_indicators)[sdg8_ind]), "~", "establishments"))
+  
+  fmla_exp <- as.formula(paste0(as.character(names(SDG8_indicators)[sdg8_ind]), "~", "exp_int"))
+  
+  assign(paste("lme_", names(SDG8_indicators)[sdg8_ind], ".L.1", sep = ""), 
+         tryCatch(lme(fmla_arrivals, data=SDG8_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+  assign(paste("lme_", names(SDG8_indicators)[sdg8_ind], ".L.2", sep = ""), 
+         tryCatch(lme(fmla_employment, data=SDG8_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+  assign(paste("lme_", names(SDG8_indicators)[sdg8_ind], ".L.3", sep = ""), 
+         tryCatch(lme(fmla_establishments, data=SDG8_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+  assign(paste("lme_", names(SDG8_indicators)[sdg8_ind], ".L.4", sep = ""), 
+         tryCatch(lme(fmla_exp, data=SDG8_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")))
+  
+}
+
+SDG8_results.L <- lapply(ls(pattern="lme_Indicator.8"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(SDG8_results.L) <- ls(pattern="lme_Indicator.8")
+
+# add a column for the explanatory variable name
+SDG8_results.L <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), SDG8_results.L, SIMPLIFY = F)
+
+# add a column for the response variable name
+SDG8_results.L <- Map(cbind, SDG8_results.L, indicator1 = gsub("lme_(.*)\\..*", "\\1", names(SDG8_results.L), perl = T))
+
+# transform to a dataframe
+SDG8_results.L <- do.call(rbind, SDG8_results.L)
+row.names(SDG8_results.L) <- NULL
+SDG8_results.L <- SDG8_results.L[c(7,6,1:5)]
+
+# delete Intercepts
+SDG8_results.L <- subset(SDG8_results.L, indicator2 !="(Intercept)")
+
+
+
+rm(list = ls(pattern = "lme_Indicator.8"))
+
+
 
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_= #
 ############## SDG12 indicators #################
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_= #
+
 SDG12_indicators <- subset(mydata.log, select = c(Indicator.12.2.1, arrivals_int, employ, 
-                                                 establishments, exp_int, country_code, year))
+                                                  establishments, exp_int, country_code, year, income_level))
+
+SDG12_indicators.H <- SDG12_indicators[which(SDG12_indicators$income_level == "H" | SDG12_indicators$income_level == "UM"),]
+SDG12_indicators.L <- SDG12_indicators[which(SDG12_indicators$income_level == "L" | SDG12_indicators$income_level == "LM"),]
 
 
 
@@ -436,14 +626,103 @@ SDG12_results <- SDG12_results[c(7,6,1:5)]
 SDG12_results <- subset(SDG12_results, indicator2 !="(Intercept)")
 
 
+# High income #####
+
+lme_Indicator.12.2.1.1 <- lme(fmla_arrivals, data=SDG12_indicators.H, random=~1|country_code,
+                              correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")
+
+lme_Indicator.12.2.1.2 <- lme(fmla_employment, data=SDG12_indicators.H, random=~1|country_code,
+                              correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")
+
+lme_Indicator.12.2.1.3 <- lme(fmla_establishments, data=SDG12_indicators.H, random=~1|country_code,
+                              correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")
+
+lme_Indicator.12.2.1.4 <- lme(fmla_exp, data=SDG12_indicators.H, random=~1|country_code,
+                              correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")
+
+
+# need to obtain a table with all the results
+# use lapply to obtain a table of coefficients 
+# for each model and put them in a list
+SDG12_results.H <- lapply(ls(pattern="lme_Indicator.12"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(SDG12_results.H) <- ls(pattern="lme_Indicator.12")
+
+# add a column for the explanatory variable name
+SDG12_results.H <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), SDG12_results.H, SIMPLIFY = F)
+
+# add a column for the response variable name
+SDG12_results.H <- Map(cbind, SDG12_results.H, indicator1 = gsub("lme_(.*)\\..*", "\\1", names(SDG12_results.H), perl = T))
+#sapply(strsplit(names(SDG8_results), "t_lme""), "[[", 2))
+
+# transform to a dataframe
+SDG12_results.H <- do.call(rbind, SDG12_results.H)
+row.names(SDG12_results.H) <- NULL 
+SDG12_results.H <- SDG12_results.H[c(7,6,1:5)]
+
+# delete Intercepts
+SDG12_results.H <- subset(SDG12_results.H, indicator2 !="(Intercept)")
+
+
+rm(list = ls(pattern = "lme_Indicator.12"))
+
+
+
+# Low income ####
+
+lme_Indicator.12.2.1.1 <- lme(fmla_arrivals, data=SDG12_indicators.L, random=~1|country_code,
+                              correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")
+
+lme_Indicator.12.2.1.2 <- lme(fmla_employment, data=SDG12_indicators.L, random=~1|country_code,
+                              correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")
+
+lme_Indicator.12.2.1.3 <- lme(fmla_establishments, data=SDG12_indicators.L, random=~1|country_code,
+                              correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")
+
+lme_Indicator.12.2.1.4 <- lme(fmla_exp, data=SDG12_indicators.L, random=~1|country_code,
+                              correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")
+
+
+# need to obtain a table with all the results
+# use lapply to obtain a table of coefficients 
+# for each model and put them in a list
+SDG12_results.L <- lapply(ls(pattern="lme_Indicator.12"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(SDG12_results.L) <- ls(pattern="lme_Indicator.12")
+
+# add a column for the explanatory variable name
+SDG12_results.L <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), SDG12_results.L, SIMPLIFY = F)
+
+# add a column for the response variable name
+SDG12_results.L <- Map(cbind, SDG12_results.L, indicator1 = gsub("lme_(.*)\\..*", "\\1", names(SDG12_results.L), perl = T))
+#sapply(strsplit(names(SDG8_results), "t_lme""), "[[", 2))
+
+# transform to a dataframe
+SDG12_results.L <- do.call(rbind, SDG12_results.L)
+row.names(SDG12_results.L) <- NULL 
+SDG12_results.L <- SDG12_results.L[c(7,6,1:5)]
+
+# delete Intercepts
+SDG12_results.L <- subset(SDG12_results.L, indicator2 !="(Intercept)")
+
+
+rm(list = ls(pattern = "lme_Indicator.12"))
+
 
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_= #
 ############## SDG14 indicators #################
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_= #
 
+
 SDG14_indicators <- subset(mydata.log, select = c(Indicator.14.4.1, Indicator.14.4.2, Indicator.14.4.3, 
-                                                 arrivals_int, employ, establishments,
-                                                 exp_int, country_code, year))
+                                                  arrivals_int, employ, establishments,
+                                                  exp_int, country_code, year, income_level))
+
+SDG14_indicators.H <- SDG14_indicators[which(SDG14_indicators$income_level == "H" | SDG14_indicators$income_level == "UM"),]
+SDG14_indicators.L <- SDG14_indicators[which(SDG14_indicators$income_level == "L" | SDG14_indicators$income_level == "LM"),]
+
 
 
 for(sdg14_ind in 1:3){
@@ -501,12 +780,139 @@ SDG14_results <- SDG14_results[c(7,6,1:5)]
 SDG14_results <- subset(SDG14_results, indicator2 !="(Intercept)")
 
 
+
+# High income ####
+
+for(sdg14_ind in 1:3){
+  fmla_arrivals <- as.formula(paste0(as.character(names(SDG14_indicators.H)[sdg14_ind]), "~", "arrivals_int"))
+  
+  fmla_employment <- as.formula(paste0(as.character(names(SDG14_indicators.H)[sdg14_ind]), "~", "employ"))
+  
+  fmla_establishments <- as.formula(paste0(as.character(names(SDG14_indicators.H)[sdg14_ind]), "~", "establishments"))
+  
+  fmla_exp <- as.formula(paste0(as.character(names(SDG14_indicators.H)[sdg14_ind]), "~", "exp_int"))
+  
+  assign(paste("lme_", names(SDG14_indicators.H)[sdg14_ind], ".1", sep = ""), 
+         tryCatch(lme(fmla_arrivals, data=SDG14_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG14_indicators.H)[sdg14_ind], ".2", sep = ""), 
+         tryCatch(lme(fmla_employment, data=SDG14_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG14_indicators.H)[sdg14_ind], ".3", sep = ""), 
+         tryCatch(lme(fmla_establishments, data=SDG14_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG14_indicators.H)[sdg14_ind], ".4", sep = ""), 
+         tryCatch(lme(fmla_exp, data=SDG14_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+}
+
+# need to obtain a table with all the results
+# use lapply to obtain a table of coefficients 
+# for each model and put them in a list
+SDG14_results.H <- lapply(ls(pattern="lme_Indicator.14"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(SDG14_results.H) <- ls(pattern="lme_Indicator.14")
+
+# add a column for the explanatory variable name
+SDG14_results.H <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), SDG14_results.H, SIMPLIFY = F)
+
+# add a column for the response variable name
+SDG14_results.H <- Map(cbind, SDG14_results.H, indicator1 = gsub("lme_(.*)\\..*", "\\1", names(SDG14_results.H), perl = T))
+#sapply(strsplit(names(SDG8_results), "t_lme""), "[[", 2))
+
+# transform to a dataframe
+SDG14_results.H <- do.call(rbind, SDG14_results.H)
+row.names(SDG14_results.H) <- NULL 
+SDG14_results.H <- SDG14_results.H[c(7,6,1:5)]
+
+# delete Intercepts
+SDG14_results.H <- subset(SDG14_results.H, indicator2 !="(Intercept)")
+
+
+rm(list = ls(pattern = "lme_Indicator.14"))
+
+
+
+# Low income ####
+
+for(sdg14_ind in 1:3){
+  fmla_arrivals <- as.formula(paste0(as.character(names(SDG14_indicators.L)[sdg14_ind]), "~", "arrivals_int"))
+  
+  fmla_employment <- as.formula(paste0(as.character(names(SDG14_indicators.L)[sdg14_ind]), "~", "employ"))
+  
+  fmla_establishments <- as.formula(paste0(as.character(names(SDG14_indicators.L)[sdg14_ind]), "~", "establishments"))
+  
+  fmla_exp <- as.formula(paste0(as.character(names(SDG14_indicators.L)[sdg14_ind]), "~", "exp_int"))
+  
+  assign(paste("lme_", names(SDG14_indicators.L)[sdg14_ind], ".1", sep = ""), 
+         tryCatch(lme(fmla_arrivals, data=SDG14_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG14_indicators.L)[sdg14_ind], ".2", sep = ""), 
+         tryCatch(lme(fmla_employment, data=SDG14_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG14_indicators.L)[sdg14_ind], ".3", sep = ""), 
+         tryCatch(lme(fmla_establishments, data=SDG14_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG14_indicators.L)[sdg14_ind], ".4", sep = ""), 
+         tryCatch(lme(fmla_exp, data=SDG14_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+}
+
+# need to obtain a table with all the results
+# use lapply to obtain a table of coefficients 
+# for each model and put them in a list
+SDG14_results.L <- lapply(ls(pattern="lme_Indicator.14"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(SDG14_results.L) <- ls(pattern="lme_Indicator.14")
+
+# add a column for the explanatory variable name
+SDG14_results.L <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), SDG14_results.L, SIMPLIFY = F)
+
+# add a column for the response variable name
+SDG14_results.L <- Map(cbind, SDG14_results.L, indicator1 = gsub("lme_(.*)\\..*", "\\1", names(SDG14_results.L), perl = T))
+#sapply(strsplit(names(SDG8_results), "t_lme""), "[[", 2))
+
+# transform to a dataframe
+SDG14_results.L <- do.call(rbind, SDG14_results.L)
+row.names(SDG14_results.L) <- NULL 
+SDG14_results.L <- SDG14_results.L[c(7,6,1:5)]
+
+# delete Intercepts
+SDG14_results.L <- subset(SDG14_results.L, indicator2 !="(Intercept)")
+
+
+rm(list = ls(pattern = "lme_Indicator.14"))
+
+
+
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_= #
 ############## SDG15 indicators #################
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_= #
+
 SDG15_indicators <- subset(mydata.log, select = c(Indicator.15.1.1, Indicator.15.4.1, Indicator.15.5.1, 
                                                   arrivals_int, employ, establishments,
-                                                  exp_int, country_code, year))
+                                                  exp_int, country_code, year, income_level))
+
+SDG15_indicators.H <- SDG15_indicators[which(SDG15_indicators$income_level == "H" | SDG15_indicators$income_level == "UM"),]
+SDG15_indicators.L <- SDG15_indicators[which(SDG15_indicators$income_level == "L" | SDG15_indicators$income_level == "LM"),]
 
 
 for(sdg15_ind in 1:3){
@@ -565,12 +971,132 @@ SDG15_results <- subset(SDG15_results, indicator2 !="(Intercept)")
 
 
 
+# High income #####
+
+for(sdg15_ind in 1:3){
+  fmla_arrivals <- as.formula(paste0(as.character(names(SDG15_indicators.H)[sdg15_ind]), "~", "arrivals_int"))
+  
+  fmla_employment <- as.formula(paste0(as.character(names(SDG15_indicators.H)[sdg15_ind]), "~", "employ"))
+  
+  fmla_establishments <- as.formula(paste0(as.character(names(SDG15_indicators.H)[sdg15_ind]), "~", "establishments"))
+  
+  fmla_exp <- as.formula(paste0(as.character(names(SDG15_indicators.H)[sdg15_ind]), "~", "exp_int"))
+  
+  assign(paste("lme_", names(SDG15_indicators.H)[sdg15_ind], ".1", sep = ""), 
+         tryCatch(lme(fmla_arrivals, data=SDG15_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG15_indicators.H)[sdg15_ind], ".2", sep = ""), 
+         tryCatch(lme(fmla_employment, data=SDG15_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG15_indicators.H)[sdg15_ind], ".3", sep = ""), 
+         tryCatch(lme(fmla_establishments, data=SDG15_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG15_indicators.H)[sdg15_ind], ".4", sep = ""), 
+         tryCatch(lme(fmla_exp, data=SDG15_indicators.H, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+}
+
+# need to obtain a table with all the results
+# use lapply to obtain a table of coefficients 
+# for each model and put them in a list
+SDG15_results.H <- lapply(ls(pattern="lme_Indicator.15"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(SDG15_results.H) <- ls(pattern="lme_Indicator.15")
+
+# add a column for the explanatory variable name
+SDG15_results.H <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), SDG15_results.H, SIMPLIFY = F)
+
+# add a column for the response variable name
+SDG15_results.H <- Map(cbind, SDG15_results.H, indicator1 = gsub("lme_(.*)\\..*", "\\1", names(SDG15_results.H), perl = T))
+#sapply(strsplit(names(SDG8_results), "t_lme""), "[[", 2))
+
+# transform to a dataframe
+SDG15_results.H <- do.call(rbind, SDG15_results.H)
+row.names(SDG15_results.H) <- NULL 
+SDG15_results.H <- SDG15_results.H[c(7,6,1:5)]
+
+# delete Intercepts
+SDG15_results.H <- subset(SDG15_results.H, indicator2 !="(Intercept)")
+
+
+rm(list = ls(pattern = "lme_Indicator.15"))
+
+
+# Low income ####
+
+for(sdg15_ind in 1:3){
+  fmla_arrivals <- as.formula(paste0(as.character(names(SDG15_indicators.L)[sdg15_ind]), "~", "arrivals_int"))
+  
+  fmla_employment <- as.formula(paste0(as.character(names(SDG15_indicators.L)[sdg15_ind]), "~", "employ"))
+  
+  fmla_establishments <- as.formula(paste0(as.character(names(SDG15_indicators.L)[sdg15_ind]), "~", "establishments"))
+  
+  fmla_exp <- as.formula(paste0(as.character(names(SDG15_indicators.L)[sdg15_ind]), "~", "exp_int"))
+  
+  assign(paste("lme_", names(SDG15_indicators.L)[sdg15_ind], ".1", sep = ""), 
+         tryCatch(lme(fmla_arrivals, data=SDG15_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG15_indicators.L)[sdg15_ind], ".2", sep = ""), 
+         tryCatch(lme(fmla_employment, data=SDG15_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG15_indicators.L)[sdg15_ind], ".3", sep = ""), 
+         tryCatch(lme(fmla_establishments, data=SDG15_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+  assign(paste("lme_", names(SDG15_indicators.L)[sdg15_ind], ".4", sep = ""), 
+         tryCatch(lme(fmla_exp, data=SDG15_indicators.L, random=~1|country_code,
+                      correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML",
+                      control = list(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, msMaxEval = 1000))))
+  
+}
+
+# need to obtain a table with all the results
+# use lapply to obtain a table of coefficients 
+# for each model and put them in a list
+SDG15_results.L <- lapply(ls(pattern="lme_Indicator.15"), function(x){as.data.frame(summary(get(x))$tTable)})
+
+# change the names of list elements
+names(SDG15_results.L) <- ls(pattern="lme_Indicator.15")
+
+# add a column for the explanatory variable name
+SDG15_results.L <- mapply(function(x) "[<-"(x, "indicator2", value = rownames(x)), SDG15_results.L, SIMPLIFY = F)
+
+# add a column for the response variable name
+SDG15_results.L <- Map(cbind, SDG15_results.L, indicator1 = gsub("lme_(.*)\\..*", "\\1", names(SDG15_results.L), perl = T))
+#sapply(strsplit(names(SDG8_results), "t_lme""), "[[", 2))
+
+# transform to a dataframe
+SDG15_results.L <- do.call(rbind, SDG15_results.L)
+row.names(SDG15_results.L) <- NULL 
+SDG15_results.L <- SDG15_results.L[c(7,6,1:5)]
+
+# delete Intercepts
+SDG15_results.L <- subset(SDG15_results.L, indicator2 !="(Intercept)")
+
+rm(list = ls(pattern = "lme_Indicator.15"))
+
+
+
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
 ############### Visualisations #################
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
 library(qgraph) 
 
-# tourism
+# tourism ####
 # make results into a matrix
 names(tourism_results)[7] <- "pvalue"
 tourism_results$Value <- ifelse(tourism_results$pvalue > 0.05, 0, tourism_results$Value)
@@ -590,8 +1116,49 @@ qgraph(tourism_results_viz, maximum=0.01, minimum=0.006, borders = F, vsize = 20
        label.cex = 1, edge.label.cex = 2,filetype="pdf",filename="Tourism_indicators", width = 3.5, height = 3.5)
 
 
+# tourism High income
+# make results into a matrix
+names(tourism_results.H)[7] <- "pvalue"
+tourism_results.H$Value <- ifelse(tourism_results.H$pvalue > 0.05, 0, tourism_results.H$Value)
+tourism_results.H_viz <- matrix(0, 5, 5)
+rownames(tourism_results.H_viz) <- c(as.character(tourism_results.H$indicator1), "NFVD_prop")
+colnames(tourism_results.H_viz) <- c(as.character(tourism_results.H$indicator1), "NFVD_prop")
+tourism_results.H_viz[5,1:4] <- c(tourism_results.H$Value)
 
-# SDG 8
+
+qgraph(tourism_results.H_viz, maximum=0.03, minimum=0, borders = F, vsize = 20,
+       node.resolution=400, directed = T, shape="circle", color = c("darkseagreen", "lavenderblush3"),
+       #posCol="deepskyblue4", negCol="darkred", layout="groups", 
+       vsize=10, fade = T, theme = "colorblind",
+       groups = list(Tourism = 5, Flickr = c(1:4)), legend = F, edge.labels = T,
+       layout = matrix(c(-.9,-.3,.3,.9, 0, -.7,-.7,-.7,-.7,.7), ncol = 2),
+       labels = c("International \narrivals", "Employment", "Establishments", "Expenditure", "Nature tourism"),
+       label.cex = 1, edge.label.cex = 2,filetype="pdf",filename="Tourism_indicators.H", width = 3.5, height = 3.5)
+
+
+# tourism Low income
+# make results into a matrix
+names(tourism_results.L)[7] <- "pvalue"
+tourism_results.L$Value <- ifelse(tourism_results.L$pvalue > 0.05, 0, tourism_results.L$Value)
+tourism_results.L_viz <- matrix(0, 5, 5)
+rownames(tourism_results.L_viz) <- c(as.character(tourism_results.L$indicator1), "NFVD_prop")
+colnames(tourism_results.L_viz) <- c(as.character(tourism_results.L$indicator1), "NFVD_prop")
+tourism_results.L_viz[5,1:4] <- c(tourism_results.L$Value)
+
+
+qgraph(tourism_results.L_viz, maximum=0.02, minimum=0, borders = F, vsize = 20,
+       node.resolution=400, directed = T, shape="circle", color = c("darkseagreen", "lavenderblush3"),
+       #posCol="deepskyblue4", negCol="darkred", layout="groups", 
+       vsize=10, fade = T, theme = "colorblind",
+       groups = list(Tourism = 5, Flickr = c(1:4)), legend = F, edge.labels = T,
+       layout = matrix(c(-.9,-.3,.3,.9, 0, -.7,-.7,-.7,-.7,.7), ncol = 2),
+       labels = c("International \narrivals", "Employment", "Establishments", "Expenditure", "Nature tourism"),
+       label.cex = 1, edge.label.cex = 2,filetype="pdf",filename="Tourism_indicators.L", width = 3.5, height = 3.5)
+
+
+
+
+# SDG 8 ####
 # make results into a matrix
 names(SDG8_results)[7] <- "pvalue"
 SDG8_results$Value <- ifelse(SDG8_results$pvalue > 0.05, 0, SDG8_results$Value)
@@ -610,9 +1177,48 @@ qgraph(SDG8_results_viz, maximum=0.4, minimum=0.06, borders = F, vsize = 15,
        label.cex = 1, legend = F,filetype="pdf",filename="SDG8_indicators", width = 5, height = 4)
 
 
+# SDG 8 High income
+# make results into a matrix
+names(SDG8_results.H)[7] <- "pvalue"
+SDG8.H_results_viz <- matrix(0, 14, 14)
+SDG8_results.H$Value <- ifelse(SDG8_results.H$pvalue > 0.05, 0, SDG8_results.H$Value)
+rownames(SDG8.H_results_viz) <- c(as.character(unique(SDG8_results.H$indicator1)), as.character(unique(SDG8_results.H$indicator2)))
+colnames(SDG8.H_results_viz) <- c(as.character(unique(SDG8_results.H$indicator1)), as.character(unique(SDG8_results.H$indicator2)))
+SDG8.H_results_viz[11:14,1:10] <- c(SDG8_results.H$Value)
 
 
-# SDG 12
+qgraph(SDG8.H_results_viz, maximum=0.35, minimum= 0.06, borders = F, vsize = 15, 
+       node.resolution=400, directed = T, shape="circle", 
+       vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#8F1838", "#A5465F", "#C07D8F", "#D9B1BB"),
+       groups = list(Tourism = c(11:14), Target_8.1 = c(1:2), Target_8.2 = c(4:7), Target_8.5 = c(8:10), Target_8.10 = 3), 
+       layout = matrix(c(1,11,4,2,12,6,10,13,7,8,14,5,9,0,3), ncol = 5),
+       labels = c("8.1.1", "8.1.2", "8.10.10", "8.2.1", "8.2.11", "8.2.4", "8.2.7", "8.5.11", "8.5.15", "8.5.5", 
+                  "International \narrivals", "Employment", "Establishments", "Expenditure"),
+       label.cex = 1, legend = F,filetype="pdf",filename="SDG8_indicators_H", width = 5, height = 4)
+
+
+# SDG 8 Low income
+# make results into a matrix
+names(SDG8_results.L)[7] <- "pvalue"
+SDG8.L_results_viz <- matrix(0, 14, 14)
+SDG8_results.L$Value <- ifelse(SDG8_results.L$pvalue > 0.05, 0, SDG8_results.L$Value)
+rownames(SDG8.L_results_viz) <- c(as.character(unique(SDG8_results.L$indicator1)), as.character(unique(SDG8_results.L$indicator2)))
+colnames(SDG8.L_results_viz) <- c(as.character(unique(SDG8_results.L$indicator1)), as.character(unique(SDG8_results.L$indicator2)))
+SDG8.L_results_viz[11:14,1:10] <- c(SDG8_results.L$Value)
+
+
+qgraph(SDG8.L_results_viz, maximum=0.52, minimum= 0.06, borders = F, vsize = 15, 
+       node.resolution=400, directed = T, shape="circle", 
+       vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#8F1838", "#A5465F", "#C07D8F", "#D9B1BB"),
+       groups = list(Tourism = c(11:14), Target_8.1 = c(1:2), Target_8.2 = c(4:7), Target_8.5 = c(8:10), Target_8.10 = 3), 
+       layout = matrix(c(1,11,4,2,12,6,10,13,7,8,14,5,9,0,3), ncol = 5),
+       labels = c("8.1.1", "8.1.2", "8.10.10", "8.2.1", "8.2.11", "8.2.4", "8.2.7", "8.5.11", "8.5.15", "8.5.5", 
+                  "International \narrivals", "Employment", "Establishments", "Expenditure"),
+       label.cex = 1, legend = F,filetype="pdf",filename="SDG8_indicators_L", width = 5, height = 4)
+
+
+
+# SDG 12 ####
 # make results into a matrix
 names(SDG12_results)[7] <- "pvalue"
 SDG12_results$Value <- ifelse(SDG12_results$pvalue > 0.05, 0, SDG12_results$Value)
@@ -632,8 +1238,48 @@ qgraph(SDG12_results_viz, maximum=0.3, minimum=0.12, borders = F, vsize = 20,
        label.cex = 1, edge.label.cex = 2,filetype="pdf",filename="SDG12_indicator", width = 3.5, height = 3.5)
 
 
+# SDG 12 High Income
+# make results into a matrix
+names(SDG12_results.H)[7] <- "pvalue"
+SDG12_results.H$Value <- ifelse(SDG12_results.H$pvalue > 0.05, 0, SDG12_results.H$Value)
+SDG12.H_results_viz <- matrix(0, 5, 5)
+rownames(SDG12.H_results_viz) <- c(as.character(unique(SDG12_results.H$indicator1)), as.character(unique(SDG12_results.H$indicator2)))
+colnames(SDG12.H_results_viz) <- c(as.character(unique(SDG12_results.H$indicator1)), as.character(unique(SDG12_results.H$indicator2)))
+SDG12.H_results_viz[2:5,1] <- c(SDG12_results.H$Value)
 
-# SDG 14
+
+qgraph(SDG12.H_results_viz, maximum=0.3, minimum=0.12, borders = F, vsize = 20, 
+       node.resolution=400, directed = T, shape="circle",
+       vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#CF8D2A"),
+       groups = list(covariate = c(2:5), response = 1), 
+       layout = matrix(c(0,-.9,-.3,.3,.9, -.8,.7,.7,.7,.7), ncol = 2),
+       legend = F, edge.labels = T,
+       labels = c("12.2.1", "International \narrivals", "Employment", "Establishments", "Expenditure"),
+       label.cex = 1, edge.label.cex = 2)#,filetype="pdf",filename="SDG12_indicator.H", width = 3.5, height = 3.5)
+
+# SDG 12 Low income
+# make results into a matrix
+names(SDG12_results.L)[7] <- "pvalue"
+SDG12_results.L$Value <- ifelse(SDG12_results.L$pvalue > 0.05, 0, SDG12_results.L$Value)
+SDG12.L_results_viz <- matrix(0, 5, 5)
+rownames(SDG12.L_results_viz) <- c(as.character(unique(SDG12_results.L$indicator1)), as.character(unique(SDG12_results.L$indicator2)))
+colnames(SDG12.L_results_viz) <- c(as.character(unique(SDG12_results.L$indicator1)), as.character(unique(SDG12_results.L$indicator2)))
+SDG12.L_results_viz[2:5,1] <- c(SDG12_results.L$Value)
+
+
+qgraph(SDG12.L_results_viz, maximum=0.3, minimum=0.12, borders = F, vsize = 20, 
+       node.resolution=400, directed = T, shape="circle",
+       vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#CF8D2A"),
+       groups = list(covariate = c(2:5), response = 1), 
+       layout = matrix(c(0,-.9,-.3,.3,.9, -.8,.7,.7,.7,.7), ncol = 2),
+       legend = F, edge.labels = T,
+       labels = c("12.2.1", "International \narrivals", "Employment", "Establishments", "Expenditure"),
+       label.cex = 1, edge.label.cex = 2,filetype="pdf",filename="SDG12_indicator.L", width = 3.5, height = 3.5)
+
+
+
+
+# SDG 14 ####
 # make results into a matrix
 names(SDG14_results)[7] <- "pvalue"
 SDG14_results$Value <- ifelse(SDG14_results$pvalue > 0.05, 0, SDG14_results$Value)
@@ -654,8 +1300,51 @@ qgraph(SDG14_results_viz, maximum=0.17, minimum=0.01, borders = F, vsize = 15,
        label.cex = 1, edge.label.cex = 2,filetype="pdf",filename="SDG14_indicators", width = 5, height = 4)
 
 
+# SDG 14 High income
+# make results into a matrix
+names(SDG14_results.H)[7] <- "pvalue"
+SDG14_results.H$Value <- ifelse(SDG14_results.H$pvalue > 0.05, 0, SDG14_results.H$Value)
+SDG14.H_results_viz <- matrix(0, 7, 7)
+rownames(SDG14.H_results_viz) <- c(as.character(unique(SDG14_results.H$indicator1)), as.character(unique(SDG14_results.H$indicator2)))
+colnames(SDG14.H_results_viz) <- c(as.character(unique(SDG14_results.H$indicator1)), as.character(unique(SDG14_results.H$indicator2)))
+SDG14.H_results_viz[4:7,1:3] <- c(SDG14_results.H$Value)
 
-# SDG 15
+
+qgraph(SDG14.H_results_viz, maximum=0.17, minimum=0, borders = F, vsize = 15, 
+       node.resolution=400, directed = T, shape="circle", 
+       vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#1F97D4"),
+       groups = list(covariate = c(4:7), response = c(1:3)), 
+       legend = F, edge.labels = T, edge.label.position = c(.5,.5,.5,.3,.5,.5),
+       layout = matrix(c(-.6,0,.6,-.9,-.3,.3,.9,-.8,-.8,-.8,.8,.8,.8,.8), ncol = 2),
+       labels = c("14.4.1", "14.4.2", "14.4.3", 
+                  "International \narrivals", "Employment", "Establishments", "Expenditure"),
+       label.cex = 1, edge.label.cex = 2,filetype="pdf",filename="SDG14_indicators.H", width = 5, height = 4)
+
+
+# SDG 14 Low income
+# make results into a matrix
+names(SDG14_results.L)[7] <- "pvalue"
+SDG14_results.L$Value <- ifelse(SDG14_results.L$pvalue > 0.05, 0, SDG14_results.L$Value)
+SDG14.L_results_viz <- matrix(0, 7, 7)
+rownames(SDG14.L_results_viz) <- c(as.character(unique(SDG14_results.L$indicator1)), as.character(unique(SDG14_results.L$indicator2)))
+colnames(SDG14.L_results_viz) <- c(as.character(unique(SDG14_results.L$indicator1)), as.character(unique(SDG14_results.L$indicator2)))
+SDG14.L_results_viz[4:7,1:3] <- c(SDG14_results.L$Value)
+
+
+qgraph(SDG14.L_results_viz, maximum=0.3, minimum=0, borders = F, vsize = 15, 
+       node.resolution=400, directed = T, shape="circle", 
+       vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#1F97D4"),
+       groups = list(covariate = c(4:7), response = c(1:3)), 
+       legend = F, edge.labels = T, edge.label.position = c(.2,.2,.2,.2,.4,.4,.8,.6,.6,.5),
+       layout = matrix(c(-.6,0,.6,-.9,-.3,.3,.9,-.8,-.8,-.8,.8,.8,.8,.8), ncol = 2),
+       labels = c("14.4.1", "14.4.2", "14.4.3", 
+                  "International \narrivals", "Employment", "Establishments", "Expenditure"),
+       label.cex = 1, edge.label.cex = 2,filetype="pdf",filename="SDG14_indicators.L", width = 5, height = 4)
+
+
+
+
+# SDG 15 ####
 # make results into a matrix
 names(SDG15_results)[7] <- "pvalue"
 SDG15_results$Value <- ifelse(SDG15_results$pvalue > 0.05, 0, SDG15_results$Value)
@@ -674,6 +1363,48 @@ qgraph(SDG15_results_viz, maximum=0.15, minimum=0, borders = F, vsize = 15,
        labels = c("15.1.1", "15.4.1", "15.5.1", 
                   "International \narrivals", "Employment", "Establishments", "Expenditure"),
        label.cex = 1, edge.label.cex = 2, filetype="pdf",filename="SDG15_indicators", width = 5, height = 3.5)
+
+
+# SDG 15 High Income
+# make results into a matrix
+names(SDG15_results.H)[7] <- "pvalue"
+SDG15_results.H$Value <- ifelse(SDG15_results.H$pvalue > 0.05, 0, SDG15_results.H$Value)
+SDG15.H_results_viz <- matrix(0, 7, 7)
+rownames(SDG15.H_results_viz) <- c(as.character(unique(SDG15_results.H$indicator1)), as.character(unique(SDG15_results.H$indicator2)))
+colnames(SDG15.H_results_viz) <- c(as.character(unique(SDG15_results.H$indicator1)), as.character(unique(SDG15_results.H$indicator2)))
+SDG15.H_results_viz[4:7,1:3] <- c(SDG15_results.H$Value)
+
+
+qgraph(SDG15.H_results_viz, maximum=0.15, minimum=0, borders = F, vsize = 15, 
+       node.resolution=400, directed = T, shape="circle",
+       vsize=10, trans = T, fade = F, theme = "colorblind", color = c("lavenderblush3", "#59BA47", "#8ACE7E", "#ADDCA4"),
+       groups = list(Tourism = c(4:7), Target_15.1 = 1, Target_15.4 = 2, Target_15.5 = 3), 
+       legend = F, edge.labels = T, 
+       layout = matrix(c(-.6,0,.6,-.9,-.3,.3,.9,-.8,-.8,-.8,.8,.8,.8,.8), ncol = 2),
+       labels = c("15.1.1", "15.4.1", "15.5.1", 
+                  "International \narrivals", "Employment", "Establishments", "Expenditure"),
+       label.cex = 1, edge.label.cex = 2, filetype="pdf",filename="SDG15_indicators.H", width = 5, height = 3.5)
+
+
+# SDG 15 Low Income
+# make results into a matrix
+names(SDG15_results.L)[7] <- "pvalue"
+SDG15_results.L$Value <- ifelse(SDG15_results.L$pvalue > 0.05, 0, SDG15_results.L$Value)
+SDG15.L_results_viz <- matrix(0, 7, 7)
+rownames(SDG15.L_results_viz) <- c(as.character(unique(SDG15_results.L$indicator1)), as.character(unique(SDG15_results.L$indicator2)))
+colnames(SDG15.L_results_viz) <- c(as.character(unique(SDG15_results.L$indicator1)), as.character(unique(SDG15_results.L$indicator2)))
+SDG15.L_results_viz[4:7,1:3] <- c(SDG15_results.L$Value)
+
+
+qgraph(SDG15.L_results_viz, maximum=0.25, minimum=0, borders = F, vsize = 15, 
+       node.resolution=400, directed = T, shape="circle",
+       vsize=10, trans = T, fade = F,theme = "colorblind", color = c("lavenderblush3", "#59BA47", "#8ACE7E", "#ADDCA4"),
+       groups = list(Tourism = c(4:7), Target_15.1 = 1, Target_15.4 = 2, Target_15.5 = 3), 
+       legend = F, edge.labels = T, edge.label.position = c(.7,.8,.9,.5,.7,.5,.5,.5),
+       layout = matrix(c(-.6,0,.6,-.9,-.3,.3,.9,-.8,-.8,-.8,.8,.8,.8,.8), ncol = 2),
+       labels = c("15.1.1", "15.4.1", "15.5.1", 
+                  "International \narrivals", "Employment", "Establishments", "Expenditure"),
+       label.cex = 1, edge.label.cex = 2, filetype="pdf",filename="SDG15_indicators.L", width = 5, height = 3.5)
 
 
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ # 
