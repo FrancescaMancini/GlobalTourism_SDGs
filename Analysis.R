@@ -3,7 +3,7 @@
 ##### of SDG indicators and tourism
 ##### Author: Francesca Mancini
 ##### Date created: 2017-12-06
-##### Date modified: 2018-04-03 
+##### Date modified: 2018-04-11 
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
 
 # load packages
@@ -572,13 +572,15 @@ library(qgraph)
 
 # tourism
 # make results into a matrix
+names(tourism_results)[7] <- "pvalue"
+tourism_results$Value <- ifelse(tourism_results$pvalue > 0.05, 0, tourism_results$Value)
 tourism_results_viz <- matrix(0, 5, 5)
 rownames(tourism_results_viz) <- c(as.character(tourism_results$indicator1), "NFVD_prop")
 colnames(tourism_results_viz) <- c(as.character(tourism_results$indicator1), "NFVD_prop")
 tourism_results_viz[5,1:4] <- c(tourism_results$Value)
 
 
-qgraph(tourism_results_viz, maximum=0.02, minimum=0.00025, borders = F, vsize = 20,
+qgraph(tourism_results_viz, maximum=0.01, minimum=0.006, borders = F, vsize = 20,
        node.resolution=400, directed = T, shape="circle", color = c("darkseagreen", "lavenderblush3"),
        #posCol="deepskyblue4", negCol="darkred", layout="groups", 
        vsize=10, fade = T, theme = "colorblind",
@@ -591,12 +593,14 @@ qgraph(tourism_results_viz, maximum=0.02, minimum=0.00025, borders = F, vsize = 
 
 # SDG 8
 # make results into a matrix
+names(SDG8_results)[7] <- "pvalue"
+SDG8_results$Value <- ifelse(SDG8_results$pvalue > 0.05, 0, SDG8_results$Value)
 SDG8_results_viz <- matrix(0, 14, 14)
 rownames(SDG8_results_viz) <- c(as.character(unique(SDG8_results$indicator1)), as.character(unique(SDG8_results$indicator2)))
 colnames(SDG8_results_viz) <- c(as.character(unique(SDG8_results$indicator1)), as.character(unique(SDG8_results$indicator2)))
 SDG8_results_viz[11:14,1:10] <- c(SDG8_results$Value)
 
-qgraph(SDG8_results_viz, maximum=0.45, minimum=0, borders = F, vsize = 15, 
+qgraph(SDG8_results_viz, maximum=0.4, minimum=0.06, borders = F, vsize = 15, 
        node.resolution=400, directed = T, shape="circle", 
        vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#8F1838", "#A5465F", "#C07D8F", "#D9B1BB"),
        groups = list(Tourism = c(11:14), Target_8.1 = c(1:2), Target_8.2 = c(4:7), Target_8.5 = c(8:10), Target_8.10 = 3), 
@@ -610,13 +614,15 @@ qgraph(SDG8_results_viz, maximum=0.45, minimum=0, borders = F, vsize = 15,
 
 # SDG 12
 # make results into a matrix
+names(SDG12_results)[7] <- "pvalue"
+SDG12_results$Value <- ifelse(SDG12_results$pvalue > 0.05, 0, SDG12_results$Value)
 SDG12_results_viz <- matrix(0, 5, 5)
 rownames(SDG12_results_viz) <- c(as.character(unique(SDG12_results$indicator1)), as.character(unique(SDG12_results$indicator2)))
 colnames(SDG12_results_viz) <- c(as.character(unique(SDG12_results$indicator1)), as.character(unique(SDG12_results$indicator2)))
 SDG12_results_viz[2:5,1] <- c(SDG12_results$Value)
 
 
-qgraph(SDG12_results_viz, maximum=0.3, minimum=0, borders = F, vsize = 20, 
+qgraph(SDG12_results_viz, maximum=0.3, minimum=0.12, borders = F, vsize = 20, 
        node.resolution=400, directed = T, shape="circle",
        vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#CF8D2A"),
        groups = list(covariate = c(2:5), response = 1), 
@@ -629,17 +635,19 @@ qgraph(SDG12_results_viz, maximum=0.3, minimum=0, borders = F, vsize = 20,
 
 # SDG 14
 # make results into a matrix
+names(SDG14_results)[7] <- "pvalue"
+SDG14_results$Value <- ifelse(SDG14_results$pvalue > 0.05, 0, SDG14_results$Value)
 SDG14_results_viz <- matrix(0, 7, 7)
 rownames(SDG14_results_viz) <- c(as.character(unique(SDG14_results$indicator1)), as.character(unique(SDG14_results$indicator2)))
 colnames(SDG14_results_viz) <- c(as.character(unique(SDG14_results$indicator1)), as.character(unique(SDG14_results$indicator2)))
 SDG14_results_viz[4:7,1:3] <- c(SDG14_results$Value)
 
 
-qgraph(SDG14_results_viz, maximum=0.2, minimum=0, borders = F, vsize = 15, 
+qgraph(SDG14_results_viz, maximum=0.17, minimum=0.01, borders = F, vsize = 15, 
        node.resolution=400, directed = T, shape="circle", 
        vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#1F97D4"),
        groups = list(covariate = c(4:7), response = c(1:3)), 
-       legend = F, edge.labels = T, edge.label.position = c(.2,.2,.2,.2,.4,.4,.4,.4,.6,.6,.6,.6),
+       legend = F, edge.labels = T, edge.label.position = c(.2,.2,.2,.2,.4,.4,.6,.6,.6,.6),
        layout = matrix(c(-.6,0,.6,-.9,-.3,.3,.9,-.8,-.8,-.8,.8,.8,.8,.8), ncol = 2),
        labels = c("14.4.1", "14.4.2", "14.4.3", 
                   "International \narrivals", "Employment", "Establishments", "Expenditure"),
@@ -649,17 +657,19 @@ qgraph(SDG14_results_viz, maximum=0.2, minimum=0, borders = F, vsize = 15,
 
 # SDG 15
 # make results into a matrix
+names(SDG15_results)[7] <- "pvalue"
+SDG15_results$Value <- ifelse(SDG15_results$pvalue > 0.05, 0, SDG15_results$Value)
 SDG15_results_viz <- matrix(0, 7, 7)
 rownames(SDG15_results_viz) <- c(as.character(unique(SDG15_results$indicator1)), as.character(unique(SDG15_results$indicator2)))
 colnames(SDG15_results_viz) <- c(as.character(unique(SDG15_results$indicator1)), as.character(unique(SDG15_results$indicator2)))
 SDG15_results_viz[4:7,1:3] <- c(SDG15_results$Value)
 
 
-qgraph(SDG15_results_viz, maximum=0.2, minimum=0, borders = F, vsize = 15, 
+qgraph(SDG15_results_viz, maximum=0.15, minimum=0, borders = F, vsize = 15, 
        node.resolution=400, directed = T, shape="circle",
-       vsize=10, fade = T, theme = "colorblind", color = c("lavenderblush3", "#59BA47", "#8ACE7E", "#ADDCA4"),
+       vsize=10, trans = T, fade = F, theme = "colorblind", color = c("lavenderblush3", "#59BA47", "#8ACE7E", "#ADDCA4"),
        groups = list(Tourism = c(4:7), Target_15.1 = 1, Target_15.4 = 2, Target_15.5 = 3), 
-       legend = F, edge.labels = T, edge.label.position = c(.2,.2,.2,.2,.4,.4,.4,.4,.6,.6,.6,.6),
+       legend = F, edge.labels = T, edge.label.position = c(.7,.2,.2,.2,.2,.5,.5,.5),
        layout = matrix(c(-.6,0,.6,-.9,-.3,.3,.9,-.8,-.8,-.8,.8,.8,.8,.8), ncol = 2),
        labels = c("15.1.1", "15.4.1", "15.5.1", 
                   "International \narrivals", "Employment", "Establishments", "Expenditure"),
