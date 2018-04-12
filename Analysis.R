@@ -3,7 +3,7 @@
 ##### of SDG indicators and tourism
 ##### Author: Francesca Mancini
 ##### Date created: 2017-12-06
-##### Date modified: 2018-04-11 
+##### Date modified: 2018-04-12 
 # =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_ #
 
 # load packages
@@ -322,6 +322,9 @@ tourism_results <- tourism_results[c(7,6,1:5)]
 tourism_results <- subset(tourism_results, indicator2 !="(Intercept)")
 
 
+rm(list = ls(pattern = "t_lme_"))
+
+
 # High income ####
 
 for(t_ind in 1:4){
@@ -588,6 +591,8 @@ SDG12_indicators.L <- SDG12_indicators[which(SDG12_indicators$income_level == "L
   fmla_establishments <- as.formula("Indicator.12.2.1 ~ establishments")
   
   fmla_exp <- as.formula("Indicator.12.2.1 ~ exp_int")
+  
+  
   
   lme_Indicator.12.2.1.1 <- lme(fmla_arrivals, data=SDG12_indicators, random=~1|country_code,
                       correlation=corAR1(form=~year|country_code), na.action = na.omit, method = "ML")
